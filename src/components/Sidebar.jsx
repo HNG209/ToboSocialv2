@@ -12,7 +12,7 @@ import { Badge, Dropdown, Menu, message, notification } from "antd";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import tobologo from "../assets/logo.png";
-import PostModal from "../PostModal";
+// import PostModal from "../PostModal";
 import socket from "../socket/socket";
 import { getAuthUser, logout } from "../redux/auth.slice";
 import { appendNotification } from "../redux/notification.slice";
@@ -24,7 +24,7 @@ const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   const authUser = useSelector((state) => state.auth.user);
-  const unRead = useSelector((state) => state.userNotifications.unRead);
+  const unRead = useSelector((state) => state.notification.unRead);
 
   useEffect(() => {
     if (!authUser) return;
@@ -86,7 +86,6 @@ const Sidebar = () => {
   const menuItems = [
     { icon: <HomeOutlined />, label: "Home", to: "/" },
     { icon: <SearchOutlined />, label: "Search", to: "/search" },
-    { icon: <CompassOutlined />, label: "Explore", to: "/explore" },
     {
       icon: <BellOutlined />,
       label: "Notifications",
@@ -99,7 +98,7 @@ const Sidebar = () => {
 
   return (
     <aside className="hidden md:flex flex-col my-5 ml-3 w-20 lg:w-64 bg-white rounded-lg shadow-2xl p-4">
-      <PostModal isOpen={isOpen} onClose={() => setIsOpen(false)} />
+      {/* <PostModal isOpen={isOpen} onClose={() => setIsOpen(false)} /> */}
 
       {/* Logo phóng to và có padding đều */}
       <div className="flex justify-center mb-6 pt-2">

@@ -1,19 +1,9 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux"; // Thêm useSelector
-import {
-  List,
-  Avatar,
-  Button,
-  Typography,
-  Space,
-  Card,
-  Tag,
-  Row,
-  Col,
-} from "antd";
+import { List, Button, Typography, Row, Col } from "antd";
 import styled from "styled-components";
-import NotificationRefractor from "../../components/refractor/NotificationRefractor";
-import { fetchMoreNotifications } from "../../redux/notification/user.notifications.slice";
+import Notification from "../components/Notification";
+import { fetchMoreNotifications } from "../redux/notification.slice";
 
 const { Text } = Typography;
 
@@ -46,10 +36,10 @@ const NotificationPage = () => {
   };
 
   const notifications = useSelector(
-    (state) => state.userNotifications.notifications
+    (state) => state.notification.notifications
   );
-  const loadingStatus = useSelector((state) => state.userNotifications.status);
-  const more = useSelector((state) => state.userNotifications.fetchMore);
+  const loadingStatus = useSelector((state) => state.notification.status);
+  const more = useSelector((state) => state.notification.fetchMore);
 
   useEffect(() => {
     if (loadingStatus === "loading") setLoadingMore(true);
@@ -93,7 +83,7 @@ const NotificationPage = () => {
         <List
           loading={loading}
           dataSource={notifications}
-          renderItem={(item) => <NotificationRefractor notification={item} />}
+          renderItem={(item) => <Notification notification={item} />}
           loadMore={
             notifications.length >= 10 && more ? (
               <div style={{ textAlign: "center", margin: "16px 0" }}>

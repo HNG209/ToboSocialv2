@@ -1,16 +1,7 @@
 import { Avatar, Button, Modal } from "antd";
-import ProfileMenu from "../components/layout/ProfileMenu";
-import PostThumb from "../components/layout/PostThumb";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  fetchPostByUser,
-  followUser,
-  getCurrentUser,
-  setStatus,
-  unfollowUser,
-} from "../redux/profile/profileSlice";
 import {
   EditOutlined,
   MenuOutlined,
@@ -18,6 +9,14 @@ import {
   SettingOutlined,
   UserAddOutlined,
 } from "@ant-design/icons";
+import ProfileMenu from "../components/ProfileMenu";
+import PostThumb from "../components/PostThumb";
+import {
+  fetchPostByUser,
+  getCurrentUser,
+  setStatus,
+} from "../redux/profile.slice";
+import { followUser, unfollowUser } from "../redux/auth.slice";
 
 const ProfilePage = () => {
   const { id } = useParams();
@@ -61,11 +60,11 @@ const ProfilePage = () => {
   };
 
   const handleUserFollow = (id) => {
-    dispatch(followUser(id));
+    dispatch(followUser(id)); // TODO: dời sang user slice
   };
 
   const handleUserUnfollow = (id) => {
-    dispatch(unfollowUser(id));
+    dispatch(unfollowUser(id)); // TODO: dời sang user slice
   };
 
   return (
@@ -243,4 +242,4 @@ const ProfilePage = () => {
   );
 };
 
-export default React.memo(ProfilePage);
+export default ProfilePage;

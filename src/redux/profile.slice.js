@@ -1,19 +1,21 @@
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import {
-  fetchPostByUserAPIV2,
+  fetchPostByUserAPI,
   fetchProfilePosts,
+} from "../services/post.service";
+import {
   followUserAPI,
-  getUserAPIv2,
+  getUserAPI,
   unfollowUserAPI,
   updateUserAPI,
-} from "../../services/api.service";
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { deletePost, toggleLike } from "../post/post.slice";
+} from "../services/user.service";
+import { deletePost, toggleLike } from "./post.slice";
 
 export const fetchPostByUser = createAsyncThunk(
   "profile/fetchPostByUser",
   async ({ id, page, limit }, { rejectWithValue }) => {
     try {
-      if (id) return await fetchPostByUserAPIV2(id, page, limit);
+      if (id) return await fetchPostByUserAPI(id, page, limit);
       return await fetchProfilePosts(page, limit);
     } catch (error) {
       console.error("Error in fetchPostByUser:", error.message);
@@ -26,7 +28,7 @@ export const getCurrentUser = createAsyncThunk(
   "profile/getCurrentUser",
   async ({ id }, { rejectWithValue }) => {
     try {
-      return await getUserAPIv2(id);
+      return await getUserAPI(id);
     } catch (error) {
       console.error("Error in getUserById:", error.message);
       return rejectWithValue(error.message);

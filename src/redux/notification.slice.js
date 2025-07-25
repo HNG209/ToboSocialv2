@@ -1,9 +1,9 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import { getAuthUser } from "../auth/authSlice";
+import { getAuthUser } from "./auth.slice";
 import {
   fetchMoreNotificationsAPI,
   markAsReadAPI,
-} from "../../services/notification.service";
+} from "../services/notification.service";
 
 // Đánh dấu bình luận đã đọc
 export const markAsRead = createAsyncThunk(
@@ -25,8 +25,8 @@ export const fetchMoreNotifications = createAsyncThunk(
   async (_, { getState, rejectWithValue }) => {
     try {
       const state = getState();
-      const page = state.userNotifications.page || 2;
-      const fetchMore = state.userNotifications.fetchMore;
+      const page = state.notification.page || 2;
+      const fetchMore = state.notification.fetchMore;
 
       if (!fetchMore) return [];
 

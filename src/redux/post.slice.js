@@ -1,17 +1,21 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import {
-  createCommentAPI,
-  fetchPostAuthorAPI,
-  fetchLikersAPIv2,
-  fetchPostCommentsAPIv2,
-  fetchPostDetailAPI,
-  likeStatusAPIv2,
-  likeAPIv2,
-  unlikeAPIv2,
-  fetchRepliesByCommentAPI,
   deletePostAPI,
-} from "../../services/api.service";
-import { deleteComment, updateComment } from "../comments/commentsSlice";
+  fetchPostAuthorAPI,
+  fetchPostCommentsAPI,
+  fetchPostDetailAPI,
+} from "../services/post.service";
+import {
+  fetchLikersAPI,
+  likeAPI,
+  likeStatusAPI,
+  unlikeAPI,
+} from "../services/like.service";
+import {
+  createCommentAPI,
+  fetchRepliedCommentAPI,
+} from "../services/comment.service";
+import { deleteComment, updateComment } from "./comment.slice";
 
 const getLocalStorageId = () => {
   //get user from localStorage
@@ -30,9 +34,9 @@ export const fetchPostDetail = createAsyncThunk(
       // fetch author
       const authorResponse = await fetchPostAuthorAPI(postId);
       // fetch comments
-      const commentsResponse = await fetchPostCommentsAPIv2(postId);
+      const commentsResponse = await fetchPostCommentsAPI(postId);
       // fetch post likers
-      const likersResponse = await fetchLikersAPIv2(postId, "post");
+      const likersResponse = await fetchLikersAPI(postId, "post");
 
       return { authorResponse, commentsResponse, likersResponse };
     } catch (error) {
@@ -55,7 +59,7 @@ export const fetchMoreComments = createAsyncThunk(
 
       const nextPage = currentPage + 1;
       // fetch comments
-      const commentsResponse = await fetchPostCommentsAPIv2(postId, nextPage);
+      const commentsResponse = await fetchPostCommentsAPI(postId, nextPage);
 
       return { commentsResponse, nextPage };
     } catch (error) {
@@ -97,7 +101,7 @@ export const fetchRepliesComment = createAsyncThunk(
         return { commentId, replies: [] }; // nếu không có bình luận trả lời thì trả về mảng rỗng
       }
 
-      const response = await fetchRepliesByCommentAPI(
+      const response = await fetchRepliedCommentAPI(
         commentId,
         pagination ? pagination.page + 1 : 1
       ); // Lấy bình luận trả lời
@@ -131,12 +135,12 @@ export const toggleLike = createAsyncThunk(
   "post/toggleLike",
   async (postId, { rejectWithValue }) => {
     try {
-      const rs = await likeStatusAPIv2(postId, "post");
+      const rs = await likeStatusAPI(postId, "post");
       if (!rs.isLiked) {
-        return { postId, result: await likeAPIv2(postId, "post") };
+        return { postId, result: await likeAPI(postId, "post") };
       }
 
-      return { postId, result: await unlikeAPIv2(postId, "post") };
+      return { postId, result: await unlikeAPI(postId, "post") };
     } catch (error) {
       console.error("Error in fetching post detail:", error.message);
       return rejectWithValue(error.message);
@@ -148,17 +152,17 @@ export const toggleCommentLike = createAsyncThunk(
   "post/toggleCommentLike",
   async (commentId, { rejectWithValue }) => {
     try {
-      const rs = await likeStatusAPIv2(commentId, "comment");
+      const rs = await likeStatusAPI(commentId, "comment");
 
       if (!rs.isLiked) {
         return await {
-          result: await likeAPIv2(commentId, "comment"),
+          result: await likeAPI(commentId, "comment"),
           root: rs.rootCommentId ? rs.rootCommentId : null,
         };
       }
 
       return await {
-        result: await unlikeAPIv2(commentId, "comment"),
+        result: await unlikeAPI(commentId, "comment"),
         root: rs.rootCommentId ? rs.rootCommentId : null,
       };
     } catch (error) {

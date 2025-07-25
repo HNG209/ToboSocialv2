@@ -24,6 +24,10 @@ const forgotPasswordAPI = (email) => {
   return axios.post(URL_BACKEND, { email });
 };
 
+const updateUserPasswordAPI = async (data) => {
+  return axios.put("/v1/api/admin/account/password", data);
+};
+
 // const searchUsersAPI = (query) => {
 //   const URL = `/v1/api/search?q=${encodeURIComponent(query)}`;
 //   return axios.get(URL);
@@ -43,4 +47,5 @@ export {
   registerAPI,
   logoutAPI,
   forgotPasswordAPI,
+  updateUserPasswordAPI,
 };

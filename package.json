@@ -10,14 +10,23 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@reduxjs/toolkit": "^2.8.2",
     "@tailwindcss/vite": "^4.1.11",
+    "animate.css": "^4.1.1",
     "antd": "^5.26.6",
     "axios": "^1.11.0",
+    "framer-motion": "^12.23.9",
+    "lodash": "^4.17.21",
+    "lucide-react": "^0.525.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "react-icons": "^5.5.0",
     "react-redux": "^9.2.0",
     "react-router-dom": "^7.7.1",
+    "react-slick": "^0.30.3",
+    "slick-carousel": "^1.8.1",
     "socket.io-client": "^4.8.1",
+    "styled-components": "^6.1.19",
     "tailwindcss": "^4.1.11"
   },
   "devDependencies": {

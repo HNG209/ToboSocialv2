@@ -20,9 +20,15 @@ const fetchPostCommentsAPI = (postId) => {
   return axios.get(URL_BACKEND);
 };
 
+const fetchRepliedCommentAPI = (commentId, page = 1, limit = 2) => {
+  const URL_BACKEND = `/v1/api/comments/${commentId}/replies?page=${page}&limit=${limit}`;
+  return axios.post(URL_BACKEND);
+};
+
 export {
   createCommentAPI,
   deleteCommentAPI,
-  fetchPostCommentsAPI,
   updateCommentAPI,
+  fetchPostCommentsAPI,
+  fetchRepliedCommentAPI,
 };
