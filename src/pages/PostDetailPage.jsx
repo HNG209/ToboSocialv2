@@ -28,9 +28,9 @@ import {
   fetchRepliesComment,
   toggleLike,
 } from "../redux/post.slice";
-import { animate, motion } from "framer-motion";
 import Comment from "../components/Comment";
 import useFetchPost from "../hooks/useFetchPost";
+import AnimateComponent from "../components/AnimateComponent";
 
 const NextArrow = ({ onClick }) => (
   <div
@@ -52,17 +52,15 @@ const PrevArrow = ({ onClick }) => (
 
 const PostDetailPage = ({ onClose, postId }) => {
   const scrollContainerRef = useRef(null);
-  const commentRef = useRef(null);
 
   const [muted, setMuted] = useState(true);
   const [repliedComment, setRepliedComment] = useState(null); // dùng để animate, nhận id
-  const [isCommentVisible, setIsCommentVisible] = useState(false);
   const [comment, setComment] = useState("");
   const [comments, setComments] = useState([]);
   const [isLiked, setIsLiked] = useState(false);
   const [replyToComment, setReplyToComment] = useState(null);
   const [isOptionsModalOpen, setIsOptionsModalOpen] = useState(false);
-  
+
   const [postDetail] = useFetchPost(postId); // custom hook
   const authUser = useSelector((state) => state.auth.user);
   const postComments = useSelector((state) => state.post.comments);
@@ -75,37 +73,6 @@ const PostDetailPage = ({ onClose, postId }) => {
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsCommentVisible(true);
-          observer.disconnect(); // dừng theo dõi sau khi đã thấy
-        }
-      },
-      {
-        threshold: 0.6, // 60% xuất hiện trong viewport mới tính là "hiện"
-      }
-    );
-
-    if (commentRef.current) {
-      observer.observe(commentRef.current);
-    }
-
-    return () => {
-      observer.disconnect();
-    };
-  }, [repliedComment]); // trigger lại mỗi khi bạn muốn scroll tới comment mới
-
-  useEffect(() => {
-    if (commentRef.current) {
-      commentRef.current.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
-    }
-  }, [repliedComment]);
 
   const handleOptionsClick = () => setIsOptionsModalOpen(true);
   const handleOptionsClose = () => setIsOptionsModalOpen(false);
@@ -350,55 +317,33 @@ const PostDetailPage = ({ onClose, postId }) => {
           ) : (
             comments.map((c) => (
               <div className="flex flex-col" key={c._id}>
-                <motion.div
-                  key={repliedComment === c._id ? `${c._id}-zoom` : c._id} // ép remount
-                  animate={
-                    repliedComment === c._id && isCommentVisible
-                      ? { scale: [1, 1.05, 1] }
-                      : false
-                  }
-                  transition={{
-                    duration: 0.6,
-                    ease: "easeInOut",
-                  }}
-                  onAnimationComplete={() => {
+                <AnimateComponent
+                  trigger={repliedComment === c._id}
+                  onComplete={() => {
                     setRepliedComment(null);
                   }}
                 >
                   <Comment
-                    ref={repliedComment === c._id ? commentRef : null}
+                    // ref={repliedComment === c._id ? commentRef : null}
                     comment={c}
                     replyToComment={replyToComment}
                     handleCommentReply={handleCommentReply}
                     handleCancelReply={handleCancelReply}
                     onClose={onClose}
                   />
-                </motion.div>
+                </AnimateComponent>
                 {c.replies &&
                   c.replies.length > 0 &&
                   c.replies.map((reply) => (
                     <div className="ml-5" key={reply._id}>
-                      <motion.div
-                        key={
-                          repliedComment === reply._id
-                            ? `${reply._id}-zoom`
-                            : reply._id
-                        } // ép remount
-                        animate={
-                          repliedComment === reply._id && isCommentVisible
-                            ? { scale: [1, 1.07, 1] }
-                            : false
-                        }
-                        transition={{
-                          duration: 0.8,
-                          ease: "easeInOut",
-                        }}
-                        onAnimationComplete={() => {
+                      <AnimateComponent
+                        trigger={repliedComment === reply._id}
+                        onComplete={() => {
                           setRepliedComment(null);
                         }}
                       >
                         <Comment
-                          ref={repliedComment === reply._id ? commentRef : null}
+                          // ref={repliedComment === reply._id ? commentRef : null}
                           comment={reply}
                           replyToComment={replyToComment}
                           handleCommentReply={handleCommentReply}
@@ -406,7 +351,7 @@ const PostDetailPage = ({ onClose, postId }) => {
                           onClose={onClose}
                           setReplied={setRepliedComment}
                         />
-                      </motion.div>
+                      </AnimateComponent>
                     </div>
                   ))}
                 {c.replies &&

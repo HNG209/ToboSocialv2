@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 export default function AnimateComponent({ trigger, onComplete, children }) {
   const childRef = useRef();
   const [isVisible, setIsVisible] = useState(false);
+  const [animationKey, setAnimationKey] = useState(0);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -23,7 +24,7 @@ export default function AnimateComponent({ trigger, onComplete, children }) {
     return () => {
       observer.disconnect();
     };
-  }, []); // Chỉ set 1 lần là đủ, không nên dùng [children]
+  }, []);
 
   useEffect(() => {
     if (trigger && childRef.current) {
@@ -34,8 +35,16 @@ export default function AnimateComponent({ trigger, onComplete, children }) {
     }
   }, [trigger]);
 
+  // Mỗi lần trigger bật, tăng animationKey => ép remount motion.div
+  useEffect(() => {
+    if (trigger && isVisible) {
+      setAnimationKey((prev) => prev + 1);
+    }
+  }, [trigger, isVisible]);
+
   return (
     <motion.div
+      key={animationKey}
       ref={childRef}
       animate={trigger && isVisible ? { scale: [1, 1.05, 1] } : false}
       transition={{ duration: 0.6, ease: "easeInOut" }}
