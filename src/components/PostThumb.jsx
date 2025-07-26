@@ -1,13 +1,10 @@
 import { HeartOutlined, MessageOutlined } from "@ant-design/icons";
 import { useState } from "react";
-import { useDispatch } from "react-redux";
 import { Modal } from "antd";
-import { fetchPost, fetchPostDetail } from "../redux/post.slice";
 import PostDetailPage from "../pages/PostDetailPage";
 
 export default function PostThumb({ post }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const dispatch = useDispatch();
 
   return (
     <>
@@ -22,8 +19,6 @@ export default function PostThumb({ post }) {
         {/* Hover overlay */}
         <div
           onClick={() => {
-            dispatch(fetchPost(post._id));
-            dispatch(fetchPostDetail(post._id));
             setIsModalOpen(true);
           }}
           className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center gap-2 cursor-pointer"
@@ -49,8 +44,12 @@ export default function PostThumb({ post }) {
         width="90vw"
         style={{ maxWidth: 1200 }}
         centered
+        destroyOnHidden
       >
-        <PostDetailPage onClose={() => setIsModalOpen(false)} />
+        <PostDetailPage
+          postId={post._id}
+          onClose={() => setIsModalOpen(false)}
+        />
       </Modal>
     </>
   );

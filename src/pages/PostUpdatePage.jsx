@@ -9,7 +9,7 @@ import {
 } from "@ant-design/icons";
 import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
-import { fetchPost } from "../redux/post.slice";
+import { fetchPost, updatePost } from "../redux/post.slice";
 
 const { TextArea } = Input;
 
@@ -21,17 +21,15 @@ const PostUpdatePage = () => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [localFiles, setLocalFiles] = useState([]);
-  const [removeOnCloud, setRemoveOnCloud] = useState([]); // chứa các ảnh sẽ bị xoá trên cloud sau khi cập nhật
-  const [mediaFiles, setMediaFiles] = useState([]);
+  const [currentFiles, setCurrentFiles] = useState([]);
   const [previewVisible, setPreviewVisible] = useState(false);
   const [previewFile, setPreviewFile] = useState(null);
   const user = useSelector((state) => state.auth.user); // Lấy user từ Redux
 
   const currentPost = useSelector((state) => state.post.current);
 
-  const CLOUDINARY_UPLOAD_PRESET = "testUploadImage";
-  const CLOUDINARY_CLOUD_NAME = "dai4ctigv";
+  // const CLOUDINARY_UPLOAD_PRESET = "testUploadImage";
+  // const CLOUDINARY_CLOUD_NAME = "dai4ctigv";
 
   useEffect(() => {
     dispatch(fetchPost(id));
@@ -45,21 +43,11 @@ const PostUpdatePage = () => {
 
   useEffect(() => {
     if (!currentPost.mediaFiles) return;
-    setLocalFiles([...localFiles, ...currentPost.mediaFiles]);
+    setCurrentFiles([...currentFiles, ...currentPost.mediaFiles]);
   }, [currentPost.mediaFiles]);
 
   const handleRemoveLocalFile = (index) => {
-    if (localFiles[index].url && !localFiles[index].previewUrl) {
-      // là file đã upload lên Cloud (có url, không phải file local preview)
-      setRemoveOnCloud((prev) => [
-        ...prev,
-        {
-          url: localFiles[index].url,
-          public_id: localFiles[index].public_id,
-        },
-      ]);
-    }
-    setLocalFiles((prev) => prev.filter((_, i) => i !== index));
+    setCurrentFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handlePreview = (file) => {
@@ -70,61 +58,32 @@ const PostUpdatePage = () => {
   const handleSubmit = async (values) => {
     setLoading(true);
     try {
-      // 1. Upload các localFiles mới (nếu có)
-      const uploadedFiles = [];
+      const uploadData = new FormData();
 
-      for (let fileObj of localFiles) {
-        if (fileObj.file) {
-          // file mới chọn chưa upload
-          const uploadData = new FormData();
-          uploadData.append("file", fileObj.file);
-          uploadData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+      // Lọc ra những file sẽ được upload lên cloudinary
+      const uploading = currentFiles.filter((f) => !f.url);
+      const uploadedFiles = currentFiles.filter((f) => f.url);
 
-          const response = await axios.post(
-            `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/auto/upload`,
-            uploadData
-          );
+      console.log("uploading", uploading);
+      uploading.forEach((i) => {
+        uploadData.append("mediaFiles", i.file);
+      });
 
-          uploadedFiles.push({
-            url: response.data.secure_url,
-            type: response.data.resource_type === "video" ? "video" : "image",
-            public_id: response.data.public_id,
-          });
-        } else if (fileObj.url) {
-          // file cũ đã có url → giữ lại
-          uploadedFiles.push({
-            url: fileObj.url,
-            type: fileObj.type,
-            public_id: fileObj.public_id || null,
-          });
-        }
-      }
+      const postData = {
+        postId: id,
+        author: user._id,
+        caption: values.caption,
+        mediaFiles: uploadedFiles, // giữ những file cần giữ, nếu loại ra sẽ bị xoá
+      };
+      uploadData.append("content", JSON.stringify(postData));
 
-      // 2. Tạo object postData
-      // const postData = {
-      //   postId: id,
-      //   author: user._id,
-      //   caption: values.caption,
-      //   mediaFiles: uploadedFiles,
-      //   removeFiles: removeOnCloud, // gửi về để BE xử lý xoá Cloudinary nếu muốn
-      // };
+      dispatch(updatePost({ postId: id, data: uploadData }));
+      message.success("Cập nhật thành công!");
 
-      // 3. Gọi API
-      // await updatePostAPI(postData);
-
-      // notify.success("Cập nhật thành công!", "Bài viết đã được cập nhật");
-
-      // 4. Reset state
       form.resetFields();
-      setLocalFiles([]);
-      setRemoveOnCloud([]);
-      setMediaFiles([]);
     } catch (err) {
       console.error(err);
-      // notify.error(
-      //   "Lỗi khi cập nhật",
-      //   err.message || "Không thể cập nhật bài viết"
-      // );
+      message.error("Lỗi khi cập nhật");
     } finally {
       setLoading(false);
       navigate("/profile");
@@ -192,7 +151,8 @@ const PostUpdatePage = () => {
                 }
 
                 const previewUrl = URL.createObjectURL(file);
-                setLocalFiles((prev) => [
+                setCurrentFiles((prev) => [
+                  // Files sẽ được upload
                   ...prev,
                   {
                     file,
@@ -216,10 +176,10 @@ const PostUpdatePage = () => {
               </Button>
             </Upload>
 
-            {localFiles.length > 0 && (
+            {currentFiles.length > 0 && (
               <div className="mt-2">
                 <span style={{ fontWeight: "bold" }}>
-                  Chưa upload ({localFiles.length}) file:
+                  Đã upload ({currentFiles.length}) file:
                 </span>
                 <div
                   style={{
@@ -230,7 +190,7 @@ const PostUpdatePage = () => {
                     marginTop: "10px",
                   }}
                 >
-                  {localFiles.map((fileObj, index) => (
+                  {currentFiles.map((fileObj, index) => (
                     <div
                       key={index}
                       style={{

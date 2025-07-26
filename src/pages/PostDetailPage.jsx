@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Avatar, Modal } from "antd";
+import { Avatar, message, Modal } from "antd";
 import {
   Send,
   MessageCircle,
@@ -20,18 +20,17 @@ import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   createComment,
   deletePost,
   fetchMoreComments,
-  fetchPost,
-  fetchPostDetail,
   fetchRepliesComment,
   toggleLike,
 } from "../redux/post.slice";
 import { animate, motion } from "framer-motion";
 import Comment from "../components/Comment";
+import useFetchPost from "../hooks/useFetchPost";
 
 const NextArrow = ({ onClick }) => (
   <div
@@ -51,12 +50,11 @@ const PrevArrow = ({ onClick }) => (
   </div>
 );
 
-const PostDetailPage = ({ onClose }) => {
-  const { postId } = useParams();
-
+const PostDetailPage = ({ onClose, postId }) => {
   const scrollContainerRef = useRef(null);
+  const commentRef = useRef(null);
+
   const [muted, setMuted] = useState(true);
-  const [zoom, setZoom] = useState(false);
   const [repliedComment, setRepliedComment] = useState(null); // dùng để animate, nhận id
   const [isCommentVisible, setIsCommentVisible] = useState(false);
   const [comment, setComment] = useState("");
@@ -64,7 +62,19 @@ const PostDetailPage = ({ onClose }) => {
   const [isLiked, setIsLiked] = useState(false);
   const [replyToComment, setReplyToComment] = useState(null);
   const [isOptionsModalOpen, setIsOptionsModalOpen] = useState(false);
-  const commentRef = useRef(null);
+  
+  const [postDetail] = useFetchPost(postId); // custom hook
+  const authUser = useSelector((state) => state.auth.user);
+  const postComments = useSelector((state) => state.post.comments);
+  const likeStatus = useSelector((state) => state.post.current.isLiked);
+  const status = useSelector((state) => state.post.status);
+  const commentLoading = useSelector(
+    (state) => state.post.isLoadingMoreComments
+  );
+  const fetchMore = useSelector((state) => state.post.fetchMore); // check if there're more comments to load
+
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -97,21 +107,6 @@ const PostDetailPage = ({ onClose }) => {
     }
   }, [repliedComment]);
 
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-
-  const authUser = useSelector((state) => state.auth.user);
-  const postDetail = useSelector((state) => state.post.current);
-  const postComments = useSelector((state) => state.post.comments);
-  const likeStatus = useSelector((state) => state.post.current.isLiked);
-  const status = useSelector((state) => state.post.status);
-  const commentLoading = useSelector(
-    (state) => state.post.isLoadingMoreComments
-  );
-  const fetchMore = useSelector((state) => state.post.fetchMore); // check if there're more comments to load
-
-  // const userData = useSelector((state) => state.profile.user); // current user's data
-
   const handleOptionsClick = () => setIsOptionsModalOpen(true);
   const handleOptionsClose = () => setIsOptionsModalOpen(false);
 
@@ -125,8 +120,8 @@ const PostDetailPage = ({ onClose }) => {
       onOk() {
         dispatch(deletePost());
         setIsOptionsModalOpen(false);
+        message.success("Bài viết đã xoá thành công");
         onClose();
-        // notify.success("Xoá thành công!", "Bài viết đã xoá thành công");
       },
     });
   };
@@ -162,23 +157,6 @@ const PostDetailPage = ({ onClose }) => {
       }
     }
   };
-
-  useEffect(() => {
-    // test motion
-    setZoom(true);
-    const timeout = setTimeout(() => {
-      setZoom(false); // quay lại trạng thái ban đầu
-    }, 800); // chạy trong 800ms
-
-    return () => clearTimeout(timeout);
-  }, []);
-
-  useEffect(() => {
-    if (postId != null && postId != undefined) {
-      dispatch(fetchPost(postId));
-      dispatch(fetchPostDetail(postId));
-    }
-  }, [postId]);
 
   useEffect(() => {
     setReplyToComment(null); // Reset reply state when postDetail changes
@@ -441,14 +419,6 @@ const PostDetailPage = ({ onClose }) => {
                       view more replies...
                     </div>
                   )}
-                {/* {
-                                        !c?.pagination?.hasNextPage &&
-                                        <div
-                                            onClick={() => handleShowLessReplies(c._id)}
-                                            className='text-xs text-gray-500 mt-2 text-center cursor-pointer hover:text-blue-500'>
-                                            show less
-                                        </div>
-                                    } */}
               </div>
             ))
           )}

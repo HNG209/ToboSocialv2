@@ -35,6 +35,15 @@ const createPostAPI = async (postData) => {
   }
 };
 
+const updatePostAPI = async (postId, postData) => {
+  try {
+    const response = await axios.patch(`/v1/api/posts/${postId}`, postData);
+    return response;
+  } catch (error) {
+    throw new Error(error.message || "Failed to update post");
+  }
+};
+
 const deletePostAPI = (postId) => {
   const URL_BACKEND = `/v1/api/posts/${postId}`;
   return axios.delete(URL_BACKEND);
@@ -48,4 +57,5 @@ export {
   fetchPostDetailAPI,
   deletePostAPI,
   createPostAPI,
+  updatePostAPI,
 };

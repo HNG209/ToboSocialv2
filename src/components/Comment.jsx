@@ -4,7 +4,7 @@ import {
   HeartOutlined,
   RollbackOutlined,
 } from "@ant-design/icons";
-import { Avatar, Popover } from "antd";
+import { Avatar, message, Popover } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import React, { forwardRef, useState } from "react";
@@ -86,11 +86,10 @@ const Comment = forwardRef(function CommentRefractor(
         okType: "danger",
         cancelText: "Huỷ",
         onOk() {
-          console.log("ok");
-          // notify.success("Xoá thành công!", "Bình luận đã được xoá");
+          dispatch(deleteComment(comment._id));
+          message.success("Bình luận đã được xoá");
         },
       });
-      dispatch(deleteComment(comment._id));
     } else if (action === "modify") {
       setIsModify(true);
       // TODO: Xử lý sửa comment

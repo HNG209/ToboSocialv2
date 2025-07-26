@@ -6,10 +6,13 @@ import {
   DeleteOutlined,
 } from "@ant-design/icons";
 import { createPostAPI } from "../services/post.service";
+import { useDispatch } from "react-redux";
+import { createPost } from "../redux/post.slice";
 
 const { TextArea } = Input;
 
 const PostCreatePage = () => {
+  const dispatch = useDispatch();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [localFiles, setLocalFiles] = useState([]);
@@ -45,7 +48,8 @@ const PostCreatePage = () => {
         uploadData.append("mediaFiles", i.file);
       });
 
-      await createPostAPI(uploadData);
+      dispatch(createPost(uploadData));
+      // await createPostAPI(uploadData);
       message.success("Bài viết đã được tạo thành công");
       form.resetFields();
       setLocalFiles([]);

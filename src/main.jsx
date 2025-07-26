@@ -6,6 +6,7 @@ import router from "./routes/index.jsx";
 import { RouterProvider } from "react-router-dom";
 import { Provider } from "react-redux";
 import { store } from "./store/store.js";
+import '@ant-design/v5-patch-for-react-19';
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>

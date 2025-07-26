@@ -9,7 +9,7 @@ import {
   unfollowUserAPI,
   updateUserAPI,
 } from "../services/user.service";
-import { deletePost, toggleLike } from "./post.slice";
+import { createPost, deletePost, toggleLike, updatePost } from "./post.slice";
 
 export const fetchPostByUser = createAsyncThunk(
   "profile/fetchPostByUser",
@@ -98,6 +98,16 @@ const profileSlice = createSlice({
         state.posts = state.posts.filter(
           (p) => p._id !== action.payload.postId
         );
+      })
+
+      // from post slice
+      .addCase(createPost.fulfilled, (state, action) => {
+        state.posts.push(action.payload);
+        console.log("fulfilled:", action.payload);
+      })
+
+      .addCase(updatePost.fulfilled, (state, action) => {
+        console.log("updated:", action.payload);
       })
 
       .addCase(toggleLike.fulfilled, (state, action) => {

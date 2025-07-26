@@ -1,9 +1,11 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import {
+  createPostAPI,
   deletePostAPI,
   fetchPostAuthorAPI,
   fetchPostCommentsAPI,
   fetchPostDetailAPI,
+  updatePostAPI,
 } from "../services/post.service";
 import {
   fetchLikersAPI,
@@ -17,15 +19,31 @@ import {
 } from "../services/comment.service";
 import { deleteComment, updateComment } from "./comment.slice";
 
-const getLocalStorageId = () => {
-  //get user from localStorage
-  const userFromStorage = localStorage.getItem("user")
-    ? JSON.parse(localStorage.getItem("user"))
-    : null;
+export const createPost = createAsyncThunk(
+  "post/createPost",
+  async (data, { rejectWithValue }) => {
+    try {
+      const result = await createPostAPI(data);
+      return result;
+    } catch (error) {
+      console.error("Error in fetching post detail:", error.message);
+      return rejectWithValue(error.message);
+    }
+  }
+);
 
-  //get user by id in localStorage
-  return userFromStorage ? userFromStorage._id : null; // Lấy userId từ localStorage
-};
+export const updatePost = createAsyncThunk(
+  "post/updatePost",
+  async ({ postId, data }, { rejectWithValue }) => {
+    try {
+      const result = await updatePostAPI(postId, data);
+      return result;
+    } catch (error) {
+      console.error("Error in fetching post detail:", error.message);
+      return rejectWithValue(error.message);
+    }
+  }
+);
 
 export const fetchPostDetail = createAsyncThunk(
   "post/fetchPostDetail",
@@ -120,7 +138,6 @@ export const createComment = createAsyncThunk(
     try {
       const response = await createCommentAPI({
         ...comment,
-        user: getLocalStorageId(), // Lấy userId từ localStorage
       });
 
       return response;

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import {
   HomeOutlined,
   SearchOutlined,
@@ -21,7 +21,6 @@ import { appendNotification } from "../redux/notification.slice";
 const Sidebar = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const [isOpen, setIsOpen] = useState(false);
 
   const authUser = useSelector((state) => state.auth.user);
   const unRead = useSelector((state) => state.notification.unRead);
@@ -98,8 +97,6 @@ const Sidebar = () => {
 
   return (
     <aside className="hidden md:flex flex-col my-5 ml-3 w-20 lg:w-64 bg-white rounded-lg shadow-2xl p-4">
-      {/* <PostModal isOpen={isOpen} onClose={() => setIsOpen(false)} /> */}
-
       {/* Logo phóng to và có padding đều */}
       <div className="flex justify-center mb-6 pt-2">
         <NavLink to="/" className="block w-full">
