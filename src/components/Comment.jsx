@@ -49,7 +49,7 @@ const Comment = forwardRef(function CommentRefractor(
     onClose,
     setReplied,
   },
-  ref // 👈 nhận ref từ component cha
+  ref // nhận ref từ component cha
 ) {
   const [option, setOption] = useState(false);
   const [isModify, setIsModify] = useState(false);
