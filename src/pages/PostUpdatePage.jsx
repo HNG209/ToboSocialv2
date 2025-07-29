@@ -15,20 +15,17 @@ const { TextArea } = Input;
 const PostUpdatePage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-
   const { id } = useParams(); //post ID
+
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [currentFiles, setCurrentFiles] = useState([]);
   const [previewVisible, setPreviewVisible] = useState(false);
   const [previewFile, setPreviewFile] = useState(null);
+
   const user = useSelector((state) => state.auth.user); // Lấy user từ Redux
-
   const currentPost = useSelector((state) => state.post.current);
-
-  // const CLOUDINARY_UPLOAD_PRESET = "testUploadImage";
-  // const CLOUDINARY_CLOUD_NAME = "dai4ctigv";
 
   useEffect(() => {
     dispatch(fetchPost(id));
@@ -120,16 +117,29 @@ const PostUpdatePage = () => {
           <Form.Item
             name="mediaFiles"
             label="Ảnh/Video"
-            // rules={[
-            //     {
-            //         validator: () => {
-            //             if (mediaFiles.length === 0) {
-            //                 return Promise.reject(new Error('Vui lòng tải lên ít nhất một ảnh hoặc video'));
-            //             }
-            //             return Promise.resolve();
-            //         },
-            //     },
-            // ]}
+            rules={[
+              {
+                validator: () => {
+                  const uploading = currentFiles.filter((f) => !f.url);
+                  const uploadedFiles = currentFiles.filter((f) => f.url);
+
+                  const currentUrls = currentPost.mediaFiles
+                    .map((f) => f.url)
+                    .sort();
+                  const uploadedUrls = uploadedFiles.map((f) => f.url).sort();
+
+                  const isSame =
+                    currentUrls.length === uploadedUrls.length &&
+                    currentUrls.every((url, idx) => url === uploadedUrls[idx]);
+                  if (uploading.length === 0 && isSame) {
+                    return Promise.reject(
+                      new Error("Bài viết chưa được chỉnh sửa")
+                    );
+                  }
+                  return Promise.resolve();
+                },
+              },
+            ]}
           >
             <Upload
               beforeUpload={(file) => {

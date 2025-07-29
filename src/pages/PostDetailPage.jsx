@@ -92,7 +92,7 @@ const PostDetailPage = ({ onClose, postId }) => {
       },
     });
   };
-
+  
   const handleReportPost = () => {
     // TODO: Thêm logic báo cáo bài viết ở đây
 

@@ -1,14 +1,12 @@
 import { useEffect, useRef, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
-import { notification, Button } from "antd";
 import PostCard from "../components/postCard";
+import { fetchUserFeed } from "../redux/feed.slice";
 
 function HomePage() {
   const dispatch = useDispatch();
-  const navigate = useNavigate();
-  //   const posts = useSelector((state) => state.posts.posts);
-  const posts = [];
+  const posts = useSelector((state) => state.feed.posts);
+  // const posts = [];
   //   const status = useSelector((state) => state.posts.status);
   //   const currentPage = useSelector((state) => state.posts.currentPage);
   //   const hasMore = useSelector((state) => state.posts.hasMore);
@@ -31,56 +29,34 @@ function HomePage() {
   }, []);
 
   useEffect(() => {
-    // Reset posts and fetch initial page
-    // dispatch(resetPosts());
-    // dispatch(fetchPosts({ page: 1 }));
+    dispatch(fetchUserFeed({ page: 1, limit: 10 }));
   }, [dispatch]);
 
-  const showLoginNotification = () => {
-    notification.warning({
-      message: "Authentication Required",
-      description:
-        "Please log in to interact with posts, or continue viewing without interaction.",
-      placement: "topRight",
-      duration: 0, // Keep notification open until user interacts
-      btn: (
-        <div className="flex gap-2">
-          <Button
-            type="primary"
-            onClick={() => {
-              notification.destroy();
-              navigate("/login");
-            }}
-          >
-            Log In
-          </Button>
-          <Button onClick={() => notification.destroy()}>
-            Continue Viewing
-          </Button>
-        </div>
-      ),
-    });
-  };
-
-  const handleLikeToggle = (postId, isLiked) => {
-    if (!userId) {
-      showLoginNotification();
-      return;
-    }
-    if (isLiked) {
-      //   dispatch(unlikePost({ postId, userId }));
-    } else {
-      //   dispatch(likePost({ postId, userId }));
-    }
-  };
-
-  const handleComment = (postId, text) => {
-    if (!userId) {
-      showLoginNotification();
-      return;
-    }
-    // dispatch(createComment({ postId, userId, text }));
-  };
+  // const showLoginNotification = () => {
+  //   notification.warning({
+  //     message: "Authentication Required",
+  //     description:
+  //       "Please log in to interact with posts, or continue viewing without interaction.",
+  //     placement: "topRight",
+  //     duration: 0, // Keep notification open until user interacts
+  //     btn: (
+  //       <div className="flex gap-2">
+  //         <Button
+  //           type="primary"
+  //           onClick={() => {
+  //             notification.destroy();
+  //             navigate("/login");
+  //           }}
+  //         >
+  //           Log In
+  //         </Button>
+  //         <Button onClick={() => notification.destroy()}>
+  //           Continue Viewing
+  //         </Button>
+  //       </div>
+  //     ),
+  //   });
+  // };
 
   return (
     <div className="flex justify-center bg-white">
@@ -97,8 +73,6 @@ function HomePage() {
                   <PostCard
                     post={post}
                     userId={userId}
-                    onLikeToggle={handleLikeToggle}
-                    onComment={handleComment}
                   />
                 </div>
               );
@@ -108,8 +82,6 @@ function HomePage() {
                 key={post._id}
                 post={post}
                 userId={userId}
-                onLikeToggle={handleLikeToggle}
-                onComment={handleComment}
               />
             );
           })}

@@ -95,8 +95,13 @@ export const fetchPost = createAsyncThunk(
       const postInProfile = state.profile.posts.find(
         (post) => post._id === postId
       );
+
+      const postInFeed = state.feed.posts.find((post) => post._id === postId);
+
       // fetch post, don't need to call API if viewing profile(posts already in profile context, reuse it)
-      const postResponse = postInProfile || (await fetchPostDetailAPI(postId));
+      const postResponse =
+        postInProfile || postInFeed || (await fetchPostDetailAPI(postId));
+      // TODO: fetchPostDetail return like status by current user
 
       return postResponse;
     } catch (error) {

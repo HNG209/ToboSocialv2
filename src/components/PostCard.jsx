@@ -22,12 +22,13 @@ import {
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import Slider from "react-slick";
-// import "slick-carousel/slick/slick.css";
-// import "slick-carousel/slick/slick-theme.css";
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
 // import "../../styles/home.css";
 import { useDispatch, useSelector } from "react-redux";
 import { IoIosMore } from "react-icons/io";
 import ProfileCard from "./ProfileCard ";
+import PostDetailPage from "../pages/PostDetailPage";
 
 // Hàm tính thời gian
 const timeAgo = (date, referenceTime) => {
@@ -63,15 +64,16 @@ const copyToClipboard = (text) => {
     });
 };
 
-function PostCard({ post: initialPost, userId, onLikeToggle, onComment }) {
-//   const dispatch = useDispatch();
+function PostCard({ post: initialPost, userId }) {
+  //   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const posts = useSelector((state) => state.posts.posts);
-  const status = useSelector((state) => state.posts.status);
+  const posts = useSelector((state) => state.feed.posts); // test only
+  const status = "success";
+  // const status = useSelector((state) => state.posts.status);
   const post = posts.find((p) => p._id === initialPost._id) || initialPost;
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
+  const [isPostDetailOpen, setIsPostDetailOpen] = useState(false);
   const [isShareModalVisible, setIsShareModalVisible] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [reportReason, setReportReason] = useState("");
@@ -79,12 +81,8 @@ function PostCard({ post: initialPost, userId, onLikeToggle, onComment }) {
   const [reportLoading, setReportLoading] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isMuted, setIsMuted] = useState(true);
-  const [commentText, setCommentText] = useState("");
   const [postTime, setPostTime] = useState("");
-  const [commentTimes, setCommentTimes] = useState([]);
-  const [sortedComments, setSortedComments] = useState([]);
   const sliderRef = useRef(null);
-  const commentSliderRef = useRef(null);
   const cardRef = useRef(null);
   const videoRefs = useRef([]);
   const commentVideoRefs = useRef([]);
@@ -94,20 +92,14 @@ function PostCard({ post: initialPost, userId, onLikeToggle, onComment }) {
   const profileCardTimeoutRef = useRef(null);
   const [authorState, setAuthorState] = useState(post.author);
 
-  const showCommentModal = () => {
-    // dispatch(resetComments({ postId: post._id }));
-    // dispatch(fetchComments({ postId: post._id, page: 1 }));
-    setIsCommentModalOpen(true);
-  };
-  const handleCommentModalOk = () => setIsCommentModalOpen(false);
-  const handleCommentModalCancel = () => {
-    setIsCommentModalOpen(false);
-    // dispatch(resetComments({ postId: post._id }));
+  const showPostDetailModal = () => {
+    setIsPostDetailOpen(true);
   };
 
   const showShareModal = () => {
     setIsShareModalVisible(true);
   };
+
   const handleShareModalCancel = () => {
     setIsShareModalVisible(false);
   };
@@ -198,12 +190,6 @@ function PostCard({ post: initialPost, userId, onLikeToggle, onComment }) {
     setIsModalOpen(false);
   };
 
-  const handleLoadMoreComments = () => {
-    // dispatch(
-    //   fetchComments({ postId: post._id, page: post.currentCommentPage + 1 })
-    // );
-  };
-
   const sliderSettings = {
     dots: true,
     infinite: false,
@@ -259,45 +245,7 @@ function PostCard({ post: initialPost, userId, onLikeToggle, onComment }) {
       showLoginNotification();
       return;
     }
-    onLikeToggle(post._id, isLiked);
-  };
-
-  const handleCommentSubmit = () => {
-    if (!userId) {
-      showLoginNotification();
-      return;
-    }
-    if (commentText.trim()) {
-      onComment(post._id, commentText);
-      setCommentText("");
-    }
-  };
-
-  const handleLikeComment = (commentId) => {
-    if (!userId) {
-      showLoginNotification();
-      return;
-    }
-    const comment = post.comments.find((c) => c._id === commentId);
-    const isCommentLiked =
-      comment?.likes?.some((like) => (like._id || like) === userId) || false;
-    if (isCommentLiked) {
-      //   dispatch(unlikeComment({ postId: post._id, commentId, userId }));
-    } else {
-      //   dispatch(likeComment({ postId: post._id, commentId, userId }));
-    }
-    setTimeout(() => {
-      //   dispatch();
-      // fetchComments({ postId: post._id, page: post.currentCommentPage })
-    }, 100);
-  };
-
-  const handleDeleteComment = (commentId) => {
-    if (!userId) {
-      showLoginNotification();
-      return;
-    }
-    // dispatch(deleteComment({ postId: post._id, commentId }));
+    // onLikeToggle(post._id, isLiked);
   };
 
   const postMenu = (
@@ -313,21 +261,6 @@ function PostCard({ post: initialPost, userId, onLikeToggle, onComment }) {
       </Menu.Item>
     </Menu>
   );
-
-  const commentMenu = (commentId) => ({
-    items: [
-      {
-        key: "delete",
-        label: "Delete",
-        danger: true,
-        onClick: () => handleDeleteComment(commentId),
-      },
-      {
-        key: "cancel",
-        label: "Cancel",
-      },
-    ],
-  });
 
   const handleVisibilityChange = useCallback(
     (entries) => {
@@ -350,36 +283,34 @@ function PostCard({ post: initialPost, userId, onLikeToggle, onComment }) {
   useEffect(() => {
     setPostTime(timeAgo(post.createdAt, loadTime.current));
   }, [post]);
+  //   if (isCommentModalOpen) {
+  //     const sorted = [...post.comments].sort((a, b) => {
+  //       if (a.user?._id === userId && b.user?._id === userId) {
+  //         return new Date(b.createdAt) - new Date(a.createdAt);
+  //       }
+  //       if (a.user?._id === userId && b.user?._id !== userId) return -1;
+  //       if (a.user?._id !== userId && b.user?._id === userId) return 1;
+  //       return new Date(b.createdAt) - new Date(a.createdAt);
+  //     });
 
-  useEffect(() => {
-    if (isCommentModalOpen) {
-      const sorted = [...post.comments].sort((a, b) => {
-        if (a.user?._id === userId && b.user?._id === userId) {
-          return new Date(b.createdAt) - new Date(a.createdAt);
-        }
-        if (a.user?._id === userId && b.user?._id !== userId) return -1;
-        if (a.user?._id !== userId && b.user?._id === userId) return 1;
-        return new Date(b.createdAt) - new Date(a.createdAt);
-      });
+  //     setSortedComments(sorted);
 
-      setSortedComments(sorted);
+  //     const now = new Date();
+  //     const updatedCommentTimes = sorted.map((comment) =>
+  //       timeAgo(comment.createdAt, now)
+  //     );
+  //     setCommentTimes(updatedCommentTimes);
 
-      const now = new Date();
-      const updatedCommentTimes = sorted.map((comment) =>
-        timeAgo(comment.createdAt, now)
-      );
-      setCommentTimes(updatedCommentTimes);
-
-      if (commentSliderRef.current) {
-        commentSliderRef.current.slickGoTo(currentSlide);
-        setTimeout(() => {
-          handleVideoPlay(currentSlide, commentVideoRefs);
-        }, 100);
-      }
-    } else {
-      handleVideoPause(currentSlide, commentVideoRefs);
-    }
-  }, [isCommentModalOpen, post.comments, currentSlide, userId]);
+  //     if (commentSliderRef.current) {
+  //       commentSliderRef.current.slickGoTo(currentSlide);
+  //       setTimeout(() => {
+  //         handleVideoPlay(currentSlide, commentVideoRefs);
+  //       }, 100);
+  //     }
+  //   } else {
+  //     handleVideoPause(currentSlide, commentVideoRefs);
+  //   }
+  // }, [isCommentModalOpen, post.comments, currentSlide, userId]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(handleVisibilityChange, {
@@ -422,7 +353,7 @@ function PostCard({ post: initialPost, userId, onLikeToggle, onComment }) {
         <div className="flex items-center">
           <Avatar
             src={
-              post.author?.avatar ||
+              post.author?.profile?.avatar ||
               `https://i.pravatar.cc/150?u=${post.author?._id}`
             }
             icon={<UserOutlined />}
@@ -525,273 +456,19 @@ function PostCard({ post: initialPost, userId, onLikeToggle, onComment }) {
         </div>
       </Modal>
 
-      {/* Comment Modal */}
       <Modal
-        closable={true}
-        centered={true}
-        open={isCommentModalOpen}
-        onOk={handleCommentModalOk}
-        onCancel={handleCommentModalCancel}
-        width="80%"
-        styles={{ padding: 0, height: "80vh" }}
-        okButtonProps={{ style: { display: "none" } }}
-        cancelButtonProps={{ style: { display: "none" } }}
-        style={{ padding: 0 }}
+        open={isPostDetailOpen}
+        onCancel={() => setIsPostDetailOpen(false)}
+        footer={null}
+        width="90vw"
+        style={{ maxWidth: 1200 }}
+        centered
+        destroyOnHidden
       >
-        <div className="flex h-full">
-          <div className="hidden md:block w-3/5 h-full bg-black relative">
-            <Slider ref={commentSliderRef} {...sliderSettings}>
-              {post.mediaFiles.map((media, index) => (
-                <div key={index} className="w-full h-[80vh] relative">
-                  {media.type === "image" ? (
-                    <img
-                      src={media.url}
-                      alt={`post-media-${index}`}
-                      className="w-full h-full object-contain"
-                    />
-                  ) : (
-                    <>
-                      <video
-                        ref={(el) => (commentVideoRefs.current[index] = el)}
-                        src={media.url}
-                        className="w-full h-full object-contain"
-                        loop
-                        playsInline
-                      />
-                      <button
-                        className="absolute bottom-2 right-2 text-white bg-black bg-opacity-50 rounded-full p-1"
-                        onClick={() => toggleMute(commentVideoRefs)}
-                      >
-                        {isMuted ? <AudioMutedOutlined /> : <SoundOutlined />}
-                      </button>
-                    </>
-                  )}
-                </div>
-              ))}
-            </Slider>
-            {post.mediaFiles.length > 1 && (
-              <>
-                {currentSlide !== 0 && (
-                  <button
-                    className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-70 rounded-full p-1 shadow-md z-10"
-                    onClick={() => handlePrev(commentSliderRef)}
-                  >
-                    <LeftOutlined className="text-black text-sm" />
-                  </button>
-                )}
-                {currentSlide !== post.mediaFiles.length - 1 && (
-                  <button
-                    className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-70 rounded-full p-1 shadow-md z-10"
-                    onClick={() => handleNext(commentSliderRef)}
-                  >
-                    <RightOutlined className="text-black text-sm" />
-                  </button>
-                )}
-              </>
-            )}
-          </div>
-
-          <div className="w-full md:w-2/5 h-full flex flex-col">
-            <div className="flex items-center p-4 border-b border-gray-200">
-              <Avatar
-                src={
-                  post.author?.avatar ||
-                  `https://i.pravatar.cc/150?u=${post.author?._id}`
-                }
-                icon={<UserOutlined />}
-                className="border-2 border-pink-500 p-0.5 rounded-full"
-                size={32}
-              />
-              <div className="ml-3 flex flex-col">
-                <Link
-                  to={`/profile/${post.author?.username}`}
-                  className="font-semibold text-black hover:underline cursor-pointer"
-                >
-                  {post.author?.username || `user${post.author?._id}`}
-                </Link>
-                <span className="text-xs text-gray-400">{postTime}</span>
-              </div>
-            </div>
-
-            <div
-              className="p-4 overflow-y-auto"
-              style={{ maxHeight: "calc(80vh - 280px)" }}
-            >
-              <div className="flex items-center mb-4">
-                <Avatar
-                  src={
-                    post.author?.avatar ||
-                    `https://i.pravatar.cc/150?u=${post.author?._id}`
-                  }
-                  icon={<UserOutlined />}
-                  size={24}
-                  className="mr-2"
-                />
-                <div className="flex flex-col">
-                  <div>
-                    <span className="font-semibold mr-2 text-black">
-                      {post.author?.username || `user${post.author?._id}`}
-                    </span>
-                    <span>{post.caption}</span>
-                  </div>
-                  <span className="text-xs text-gray-400">{postTime}</span>
-                </div>
-              </div>
-
-              {sortedComments.map((comment, index) => {
-                const isCommentLiked =
-                  comment.likes?.some(
-                    (like) => (like._id || like) === userId
-                  ) || false;
-                const likeCount = comment.likes?.length || 0;
-                const isCommentOwner = comment.user?._id === userId;
-                let likeText = "";
-                if (likeCount === 1) {
-                  likeText = "1 like";
-                } else if (likeCount > 1) {
-                  likeText = `${likeCount} likes`;
-                }
-
-                return (
-                  <div
-                    key={comment._id}
-                    className="flex items-start mb-5 group relative"
-                  >
-                    <div className="mr-3">
-                      <Avatar
-                        src={
-                          comment.user?.profile?.avatar ||
-                          `https://i.pravatar.cc/150?u=${comment.user?._id}`
-                        }
-                        icon={<UserOutlined />}
-                        size={32}
-                      />
-                    </div>
-                    <div className="flex-1 text-[15px] leading-snug">
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <span className="font-semibold mr-2">
-                            {comment.user?.username ||
-                              `user${comment.user?._id}`}
-                          </span>
-                          <span>{comment.text}</span>
-                        </div>
-                        <span
-                          className="cursor-pointer ml-4"
-                          onClick={() => handleLikeComment(comment._id)}
-                        >
-                          {isCommentLiked ? (
-                            <HeartFilled className="text-red-500 text-lg" />
-                          ) : (
-                            <HeartOutlined className="text-gray-600 text-lg" />
-                          )}
-                        </span>
-                      </div>
-                      <div className="flex items-center mt-1 ml-1 relative text-[13px] text-gray-500">
-                        <span>{commentTimes[index]}</span>
-                        <span className="ml-2 min-w-[40px]">
-                          {likeText || ""}
-                        </span>
-                        {isCommentOwner && (
-                          <Dropdown
-                            menu={commentMenu(comment._id)}
-                            trigger={["click"]}
-                          >
-                            <span className="ml-2 cursor-pointer font-bold opacity-0 group-hover:opacity-100 transition-opacity">
-                              <IoIosMore />
-                            </span>
-                          </Dropdown>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-
-              {post.hasMoreComments && (
-                <div className="text-center mt-4">
-                  <Button
-                    type="link"
-                    onClick={handleLoadMoreComments}
-                    loading={status === "loading"}
-                    className="load-more-button"
-                  >
-                    Load more comments
-                  </Button>
-                </div>
-              )}
-              {!post.hasMoreComments && sortedComments.length > 0 && (
-                <div className="no-more-comments">No more comments to load</div>
-              )}
-              {status === "failed" && (
-                <div className="text-center mt-4 text-red-500">
-                  Error loading comments
-                  <Button
-                    type="link"
-                    // onClick={() =>
-                    //   dispatch(
-                    //     fetchComments({
-                    //       postId: post._id,
-                    //       page: post.currentCommentPage,
-                    //     })
-                    //   )
-                    // }
-                  >
-                    Try again
-                  </Button>
-                </div>
-              )}
-            </div>
-
-            <div className="p-4 border-t border-gray-200">
-              <div className="flex justify-between text-2xl mb-2">
-                <div className="flex gap-3">
-                  {isLiked ? (
-                    <HeartFilled
-                      className="cursor-pointer text-red-500 hover:text-gray-400"
-                      onClick={handleLikeClick}
-                    />
-                  ) : (
-                    <HeartOutlined
-                      className="cursor-pointer text-black hover:text-gray-400"
-                      onClick={handleLikeClick}
-                    />
-                  )}
-                  <MessageOutlined
-                    className="text-black hover:text-gray-400 cursor-pointer"
-                    onClick={showCommentModal}
-                  />
-                  <SendOutlined
-                    className="text-black hover:text-gray-400 cursor-pointer"
-                    onClick={showShareModal}
-                  />
-                </div>
-              </div>
-              <div className="text-sm font-semibold text-black">
-                {post.likes.length} likes
-              </div>
-            </div>
-
-            <div className="p-4 border-t border-gray-200">
-              <div className="flex items-center">
-                <Input
-                  placeholder="Add a comment..."
-                  value={commentText}
-                  onChange={(e) => setCommentText(e.target.value)}
-                  onPressEnter={handleCommentSubmit}
-                  className="flex-1 mr-2"
-                />
-                <Button
-                  type="primary"
-                  onClick={handleCommentSubmit}
-                  disabled={!commentText.trim()}
-                >
-                  Post
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <PostDetailPage
+          postId={post._id}
+          onClose={() => setIsPostDetailOpen(false)}
+        />
       </Modal>
 
       {/* Post Media Carousel */}
@@ -850,7 +527,7 @@ function PostCard({ post: initialPost, userId, onLikeToggle, onComment }) {
       {/* Action Icons */}
       <div className="flex justify-between px-3 pt-2 text-2xl">
         <div className="flex gap-3">
-          {isLiked ? (
+          {post.isLiked ? (
             <HeartFilled
               className="cursor-pointer text-red-500 hover:text-gray-400"
               onClick={handleLikeClick}
@@ -863,7 +540,7 @@ function PostCard({ post: initialPost, userId, onLikeToggle, onComment }) {
           )}
           <MessageOutlined
             className="text-black hover:text-gray-400 cursor-pointer"
-            onClick={showCommentModal}
+            onClick={showPostDetailModal}
           />
           <SendOutlined
             className="text-black hover:text-gray-400 cursor-pointer"
@@ -874,7 +551,7 @@ function PostCard({ post: initialPost, userId, onLikeToggle, onComment }) {
 
       {/* Likes */}
       <div className="px-3 pt-1 text-sm font-semibold text-black">
-        {post.likes.length} likes
+        {post.likeCount} likes
       </div>
 
       {/* Caption */}
@@ -888,7 +565,7 @@ function PostCard({ post: initialPost, userId, onLikeToggle, onComment }) {
       {/* Optional: Show a preview of comments */}
       {post.comments.length > 0 && (
         <div className="px-3 text-sm text-gray-600">
-          <div className="cursor-pointer" onClick={showCommentModal}>
+          <div className="cursor-pointer">
             View all {post.comments.length} comments
           </div>
         </div>

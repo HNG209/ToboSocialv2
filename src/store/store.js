@@ -3,11 +3,13 @@ import authReducer from "../redux/auth.slice";
 import profileReducer from "../redux/profile.slice";
 import commentReducer from "../redux/comment.slice";
 import postReducer from "../redux/post.slice";
+import feedReducer from "../redux/feed.slice";
 import notificationReducer from "../redux/notification.slice";
 
 export const store = configureStore({
   reducer: {
     post: postReducer,
+    feed: feedReducer,
     auth: authReducer,
     profile: profileReducer,
     comment: commentReducer,
