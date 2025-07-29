@@ -29,6 +29,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { IoIosMore } from "react-icons/io";
 import ProfileCard from "./ProfileCard ";
 import PostDetailPage from "../pages/PostDetailPage";
+import useProfileNavigate from "../hooks/useProfileNavigate";
+import { toggleLike } from "../redux/post.slice";
 
 // Hàm tính thời gian
 const timeAgo = (date, referenceTime) => {
@@ -65,8 +67,9 @@ const copyToClipboard = (text) => {
 };
 
 function PostCard({ post: initialPost, userId }) {
-  //   const dispatch = useDispatch();
+  const dispatch = useDispatch();
   const navigate = useNavigate();
+  const navigateProfile = useProfileNavigate();
   const posts = useSelector((state) => state.feed.posts); // test only
   const status = "success";
   // const status = useSelector((state) => state.posts.status);
@@ -241,11 +244,16 @@ function PostCard({ post: initialPost, userId }) {
   const handleNext = (ref = sliderRef) => ref.current.slickNext();
 
   const handleLikeClick = () => {
-    if (!userId) {
-      showLoginNotification();
-      return;
-    }
+    // if (!userId) {
+    //   showLoginNotification();
+    //   return;
+    // }
     // onLikeToggle(post._id, isLiked);
+    dispatch(toggleLike(post._id));
+  };
+
+  const handleProfileNavigate = (userId) => {
+    navigateProfile(userId);
   };
 
   const postMenu = (
@@ -366,12 +374,14 @@ function PostCard({ post: initialPost, userId }) {
               onMouseEnter={handleMouseEnter}
               onMouseLeave={handleMouseLeave}
             >
-              <Link
-                to={`/profile/other/${post.author?._id}`}
+              <div
+                onClick={() => {
+                  handleProfileNavigate(post?.author._id);
+                }}
                 className="font-semibold text-black hover:underline cursor-pointer"
               >
                 {post.author?.username}
-              </Link>
+              </div>
               {showProfileCard && (
                 <div
                   className="absolute z-50 top-6 left-0"

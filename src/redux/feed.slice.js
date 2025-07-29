@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { fetchUserFeedAPI } from "../services/feed.service";
+import { toggleLike } from "./post.slice";
 
 export const fetchUserFeed = createAsyncThunk(
   "feed/fetchUserFeed",
@@ -30,8 +31,21 @@ const feedSlice = createSlice({
         state.status = "loading";
       })
       .addCase(fetchUserFeed.fulfilled, (state, action) => {
-        console.log(action.payload);
         state.posts = action.payload;
+      })
+
+      .addCase(toggleLike.fulfilled, (state, action) => {
+        const {
+          postId,
+          result: { isLiked },
+        } = action.payload;
+
+        const index = state.posts.findIndex((p) => p._id === postId);
+        if (index === -1) return;
+        state.posts[index].isLiked = isLiked;
+        state.posts[index].likeCount = isLiked
+          ? state.posts[index].likeCount + 1
+          : state.posts[index].likeCount - 1;
       });
   },
 });
