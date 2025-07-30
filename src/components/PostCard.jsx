@@ -89,7 +89,6 @@ function PostCard({ post: initialPost, userId }) {
   const cardRef = useRef(null);
   const videoRefs = useRef([]);
   const commentVideoRefs = useRef([]);
-  const isLiked = post.likes.some((like) => like._id === userId);
   const loadTime = useRef(new Date());
   const [showProfileCard, setShowProfileCard] = useState(false);
   const profileCardTimeoutRef = useRef(null);

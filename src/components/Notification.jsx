@@ -2,13 +2,39 @@ import { Avatar } from "antd";
 import { useDispatch } from "react-redux";
 import { markAsRead } from "../redux/notification.slice";
 import { formatTime } from "./Comment";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 const Notification = ({ notification, onClick }) => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+
   const isUnread = notification?.isRead === false;
 
+  useEffect(() => {
+    console.log("notif ne", notification);
+  }, []);
+
   const handleNotificationClick = () => {
-    // 1. Đánh dấu đã đọc cho notification
+    if (!notification.path) return;
+
+    const queryString =
+      "?" +
+      notification.path
+        .map(
+          (item) =>
+            `${encodeURIComponent(item.key)}=${encodeURIComponent(item.value)}`
+        )
+        .join("&");
+
+    const to =
+      "/" +
+      notification.target.model +
+      "s/" +
+      notification.target.id +
+      queryString;
+
+    navigate(to);
     dispatch(markAsRead(notification.baseId || notification._id)); // nếu có baseId tức là notification trong subset
   };
 

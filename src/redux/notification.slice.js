@@ -8,8 +8,15 @@ import {
 // Đánh dấu bình luận đã đọc
 export const markAsRead = createAsyncThunk(
   "notification/markAsRead",
-  async (notificationId, { rejectWithValue }) => {
+  async (notificationId, { rejectWithValue, getState }) => {
     try {
+      const state = getState();
+      const notif = state.notification.notifications;
+      const index = notif.findIndex((i) => i.baseId === notificationId);
+      if (index !== -1) {
+        if (notif[index].isRead) return null;
+      }
+
       await markAsReadAPI(notificationId);
       return notificationId;
     } catch (error) {
@@ -25,7 +32,7 @@ export const fetchMoreNotifications = createAsyncThunk(
   async (_, { getState, rejectWithValue }) => {
     try {
       const state = getState();
-      const page = state.notification.page || 2;
+      const page = state.notification.page || 1;
       const fetchMore = state.notification.fetchMore;
 
       if (!fetchMore) return [];
@@ -44,7 +51,7 @@ const notificationSlice = createSlice({
   initialState: {
     notifications: [],
     unRead: 0,
-    page: 2,
+    page: 1,
     fetchMore: true,
     status: "idle",
   },
@@ -64,6 +71,8 @@ const notificationSlice = createSlice({
 
       // Mark as read
       .addCase(markAsRead.fulfilled, (state, action) => {
+        if (!action.payload) return;
+
         const index = state.notifications.findIndex(
           (i) => i.baseId === action.payload.toString()
         );

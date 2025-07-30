@@ -14,6 +14,7 @@ import SearchPage from "../pages/SearchPage";
 import NotificationPage from "../pages/NotificationPage";
 import PostDetailPage from "../pages/PostDetailPage";
 import PostUpdatePage from "../pages/PostUpdatePage";
+import PostDetailContainerPage from "../pages/PostDetailContainerPage";
 
 const router = createBrowserRouter([
   {
@@ -85,7 +86,7 @@ const router = createBrowserRouter([
         path: "/posts/:postId",
         element: (
           <PrivateRoute>
-            <PostDetailPage />,
+            <PostDetailContainerPage />,
           </PrivateRoute>
         ),
       },

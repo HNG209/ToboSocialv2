@@ -50,7 +50,7 @@ const PrevArrow = ({ onClick }) => (
   </div>
 );
 
-const PostDetailPage = ({ onClose, postId }) => {
+const PostDetailPage = ({ onClose, postId, commentId }) => {
   const scrollContainerRef = useRef(null);
 
   const [muted, setMuted] = useState(true);
@@ -92,7 +92,7 @@ const PostDetailPage = ({ onClose, postId }) => {
       },
     });
   };
-  
+
   const handleReportPost = () => {
     // TODO: Thêm logic báo cáo bài viết ở đây
 
@@ -318,7 +318,7 @@ const PostDetailPage = ({ onClose, postId }) => {
             comments.map((c) => (
               <div className="flex flex-col" key={c._id}>
                 <AnimateComponent
-                  trigger={repliedComment === c._id}
+                  trigger={repliedComment === c._id || commentId === c._id}
                   onComplete={() => {
                     setRepliedComment(null);
                   }}
