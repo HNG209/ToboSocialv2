@@ -31,6 +31,7 @@ import {
 import Comment from "../components/Comment";
 import useFetchPost from "../hooks/useFetchPost";
 import AnimateComponent from "../components/AnimateComponent";
+import useFetchHighlightComment from "../hooks/useFetchHighlightComment";
 
 const NextArrow = ({ onClick }) => (
   <div
@@ -50,11 +51,11 @@ const PrevArrow = ({ onClick }) => (
   </div>
 );
 
-const PostDetailPage = ({ onClose, postId, commentId }) => {
+const PostDetailPage = ({ onClose, postId, root, replyTo, commentId }) => {
   const scrollContainerRef = useRef(null);
 
   const [muted, setMuted] = useState(true);
-  const [repliedComment, setRepliedComment] = useState(null); // dùng để animate, nhận id
+  const [repliedComment, setRepliedComment] = useState(commentId); // dùng để animate, nhận id
   const [comment, setComment] = useState("");
   const [comments, setComments] = useState([]);
   const [isLiked, setIsLiked] = useState(false);
@@ -62,6 +63,11 @@ const PostDetailPage = ({ onClose, postId, commentId }) => {
   const [isOptionsModalOpen, setIsOptionsModalOpen] = useState(false);
 
   const [postDetail] = useFetchPost(postId); // custom hook
+  const [setRoot, setReplyTo, setCommentId] = useFetchHighlightComment(
+    root,
+    replyTo,
+    commentId
+  );
   const authUser = useSelector((state) => state.auth.user);
   const postComments = useSelector((state) => state.post.comments);
   const likeStatus = useSelector((state) => state.post.current.isLiked);
@@ -76,6 +82,15 @@ const PostDetailPage = ({ onClose, postId, commentId }) => {
 
   const handleOptionsClick = () => setIsOptionsModalOpen(true);
   const handleOptionsClose = () => setIsOptionsModalOpen(false);
+
+  // useEffect(() => {
+  //   dispatch(
+  //     fetchHighLightComments({
+  //       root: "6889f206a872c45718cb08dd",
+  //       lv1: "688b3b3bd312b020877e66c4",
+  //     })
+  //   );
+  // }, []);
 
   const handleDeletePost = () => {
     Modal.confirm({
@@ -318,7 +333,7 @@ const PostDetailPage = ({ onClose, postId, commentId }) => {
             comments.map((c) => (
               <div className="flex flex-col" key={c._id}>
                 <AnimateComponent
-                  trigger={repliedComment === c._id || commentId === c._id}
+                  trigger={repliedComment === c._id}
                   onComplete={() => {
                     setRepliedComment(null);
                   }}

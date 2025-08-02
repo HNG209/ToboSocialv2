@@ -1,7 +1,6 @@
 import { useParams } from "react-router-dom";
 import PostDetailPage from "./PostDetailPage";
 import { useQuery } from "../hooks/useQuery";
-// import { useEffect } from "react";
 
 export default function PostDetailContainerPage() {
   const { postId } = useParams();
@@ -15,7 +14,12 @@ export default function PostDetailContainerPage() {
 
   return (
     <div className="px-5 h-full flex justify-center items-center">
-      <PostDetailPage postId={postId} commentId={query.get("commentId")} />
+      <PostDetailPage
+        postId={postId}
+        root={query.get("root")}
+        replyTo={query.get("replyTo")}
+        commentId={query.get("commentId")}
+      />
     </div>
   );
 }

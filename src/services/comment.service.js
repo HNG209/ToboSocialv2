@@ -25,10 +25,16 @@ const fetchRepliedCommentAPI = (commentId, page = 1, limit = 2) => {
   return axios.post(URL_BACKEND);
 };
 
+const fetchHighlightCommentAPI = (root, lv1, lv2) => {
+  const URL_BACKEND = `/v1/api/comments/highlight?root=${root}&lv1=${lv1 || ''}&lv2=${lv2 || ''}`;
+  return axios.get(URL_BACKEND);
+};
+
 export {
   createCommentAPI,
   deleteCommentAPI,
   updateCommentAPI,
   fetchPostCommentsAPI,
   fetchRepliedCommentAPI,
+  fetchHighlightCommentAPI,
 };

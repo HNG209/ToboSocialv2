@@ -2,6 +2,7 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import {
   createCommentAPI,
   deleteCommentAPI,
+  fetchHighlightCommentAPI,
   fetchPostCommentsAPI,
   updateCommentAPI,
 } from "../services/comment.service";
@@ -54,6 +55,20 @@ export const deleteComment = createAsyncThunk(
       return { rs, commentId };
     } catch (error) {
       console.error("Error in deleteComment:", error.message);
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+export const fetchHighLightComments = createAsyncThunk(
+  "post/fetchHighLightComments",
+  async ({ root, lv1, lv2 }, { rejectWithValue }) => {
+    try {
+      const rs = await fetchHighlightCommentAPI(root, lv1, lv2);
+
+      return rs;
+    } catch (error) {
+      console.error("Error in fetching post detail:", error.message);
       return rejectWithValue(error.message);
     }
   }

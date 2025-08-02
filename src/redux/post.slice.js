@@ -17,7 +17,12 @@ import {
   createCommentAPI,
   fetchRepliedCommentAPI,
 } from "../services/comment.service";
-import { deleteComment, updateComment } from "./comment.slice";
+import {
+  deleteComment,
+  fetchHighLightComments,
+  updateComment,
+} from "./comment.slice";
+import { pushUnique } from "../utils/pushUnique";
 
 export const createPost = createAsyncThunk(
   "post/createPost",
@@ -49,14 +54,26 @@ export const fetchPostDetail = createAsyncThunk(
   "post/fetchPostDetail",
   async (postId, { rejectWithValue }) => {
     try {
-      // fetch author
-      const authorResponse = await fetchPostAuthorAPI(postId);
       // fetch comments
       const commentsResponse = await fetchPostCommentsAPI(postId);
       // fetch post likers
       const likersResponse = await fetchLikersAPI(postId, "post");
 
-      return { authorResponse, commentsResponse, likersResponse };
+      return { commentsResponse, likersResponse };
+    } catch (error) {
+      console.error("Error in fetching post detail:", error.message);
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+export const fetchPostAuthor = createAsyncThunk(
+  "post/fetchPostAuthor",
+  async (postId, { rejectWithValue }) => {
+    try {
+      const response = await fetchPostAuthorAPI(postId);
+
+      return response;
     } catch (error) {
       console.error("Error in fetching post detail:", error.message);
       return rejectWithValue(error.message);
@@ -216,6 +233,7 @@ const postSlice = createSlice({
     author: null, // thông tin tác giả của bài viết
     current: {}, // chi tiết bài viết hiện tại
     comments: [], // danh sách bình luận của bài viết, đánh dấu đã like đối với người dùng hiện tại
+    highlightComment: null, // comment được highlight, khi fetch đến trang có comment này thì merge lại
     likers: [], // danh sách những người like bài viết
     status: "idle", // Trạng thái tải dữ liệu
     page: 1, // trang bình luận
@@ -240,6 +258,9 @@ const postSlice = createSlice({
       .addCase(fetchPost.fulfilled, (state, action) => {
         state.current = action.payload;
       })
+      .addCase(fetchPostAuthor.fulfilled, (state, action) => {
+        state.author = action.payload;
+      })
 
       // ===== Fetch Posts by User =====
       .addCase(fetchPostDetail.pending, (state) => {
@@ -248,11 +269,10 @@ const postSlice = createSlice({
         state.status = "loading"; // Đặt trạng thái thành loading
       })
       .addCase(fetchPostDetail.fulfilled, (state, action) => {
-        const { authorResponse, commentsResponse, likersResponse } =
-          action.payload;
+        const { commentsResponse, likersResponse } = action.payload;
         state.status = "succeeded";
-        state.author = authorResponse;
-        state.comments = commentsResponse; // đã có trạng thái like của người dùng
+        state.comments = pushUnique(state.comments, commentsResponse, "_id");
+        state.highlightComment = null;
         state.likers = likersResponse.users;
         state.page = 1;
         state.fetchMore = true;
@@ -277,13 +297,7 @@ const postSlice = createSlice({
           return;
         }
 
-        // Lọc các comment đã tồn tại (theo _id)
-        const existingIds = new Set(state.comments.map((c) => c._id));
-        const uniqueNewComments = commentsResponse.filter(
-          (c) => !existingIds.has(c._id)
-        );
-
-        state.comments = [...state.comments, ...uniqueNewComments];
+        state.comments = pushUnique(state.comments, commentsResponse, "_id");
         state.page = nextPage;
         state.isLoadingMoreComments = false;
         state.status = "succeeded";
@@ -291,6 +305,12 @@ const postSlice = createSlice({
       .addCase(fetchMoreComments.rejected, (state, action) => {
         state.status = "failed"; // Đặt trạng thái thành failed
         state.error = action.payload; // Lưu lỗi nếu có
+      })
+
+      // Fetch highlight comment
+      .addCase(fetchHighLightComments.fulfilled, (state, action) => {
+        state.highlightComment = action.payload;
+        state.comments = pushUnique(state.comments, [action.payload], "_id");
       })
 
       // Create comment
@@ -339,26 +359,17 @@ const postSlice = createSlice({
         // nếu không tìm thấy bình luận thì không cần cập nhật
         if (commentIndex === -1) return;
 
-        // cập nhật bình luận trả lời
-        state.comments[commentIndex].replies = [
-          ...(state.comments[commentIndex].replies || []),
-          ...replies.comments,
-        ];
-
-        // loại bỏ các bình luận trùng lặp trong replies
-        const uniqueReplies = Array.from(
-          new Set(state.comments[commentIndex].replies.map((r) => r._id))
-        ).map((id) =>
-          state.comments[commentIndex].replies.find((r) => r._id === id)
+        // cập nhật replies mà không bị trùng
+        state.comments[commentIndex].replies = pushUnique(
+          state.comments[commentIndex].replies || [],
+          replies.comments,
+          "_id"
         );
 
-        // cập nhật lại bình luận trả lời với các bình luận không trùng lặp
-        state.comments[commentIndex].replies = uniqueReplies;
-
-        //thêm trường pagination để quản lý phân trang của bình luận trả lời
+        // thêm trường pagination để quản lý phân trang của bình luận trả lời
         state.comments[commentIndex].pagination = replies.pagination;
 
-        state.status = "succeeded"; // Đặt trạng thái thành succeeded
+        state.status = "succeeded";
       })
 
       // Toggle post like

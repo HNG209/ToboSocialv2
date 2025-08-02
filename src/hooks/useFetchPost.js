@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchPost, fetchPostDetail } from "../redux/post.slice";
+import {
+  fetchPost,
+  fetchPostAuthor,
+  fetchPostDetail,
+} from "../redux/post.slice";
 
 export default function useFetchPost(id) {
   const [postId, setPostId] = useState(id);
@@ -8,12 +12,12 @@ export default function useFetchPost(id) {
   const post = useSelector((state) => state.post.current);
 
   useEffect(() => {
-    // console.log("id", postId);
-    if (postId != null && postId != undefined) {
+    if (postId) {
+      dispatch(fetchPostAuthor(postId));
       dispatch(fetchPost(postId));
       dispatch(fetchPostDetail(postId));
     }
-  }, [postId]);
+  }, [postId, dispatch]);
 
   return [post, setPostId];
 }
