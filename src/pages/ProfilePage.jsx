@@ -13,10 +13,11 @@ import ProfileMenu from "../components/ProfileMenu";
 import PostThumb from "../components/PostThumb";
 import {
   fetchPostByUser,
+  followUser,
   getCurrentUser,
   setStatus,
+  unfollowUser,
 } from "../redux/profile.slice";
-import { followUser, unfollowUser } from "../redux/auth.slice";
 
 const ProfilePage = () => {
   const { id } = useParams();

@@ -16,31 +16,15 @@ const updateUserAPI = (data) => {
 };
 
 // API theo dõi người dùng
-const followUserAPI = (targetUserId, currentUserId) => {
-  const URL = `/v1/api/users/${targetUserId}/follow`;
-  return axios
-    .post(URL, { userId: currentUserId })
-    .then((response) => {
-      // Trả về toàn bộ response từ API (bao gồm message và user)
-      return response;
-    })
-    .catch((error) => {
-      throw error; // Ném lỗi để Redux Toolkit xử lý
-    });
+const followUserAPI = (targetUserId) => {
+  const URL_BACKEND = `/v1/api/follow/${targetUserId}`;
+  return axios.post(URL_BACKEND);
 };
 
 // API bỏ theo dõi người dùng
-const unfollowUserAPI = (targetUserId, currentUserId) => {
-  const URL = `/v1/api/users/${targetUserId}/unfollow`;
-  return axios
-    .post(URL, { userId: currentUserId })
-    .then((response) => {
-      // Trả về toàn bộ response từ API (bao gồm message và user)
-      return response;
-    })
-    .catch((error) => {
-      throw error; // Ném lỗi để Redux Toolkit xử lý
-    });
+const unfollowUserAPI = (targetUserId) => {
+  const URL_BACKEND = `/v1/api/unfollow/${targetUserId}`;
+  return axios.delete(URL_BACKEND);
 };
 
 const searchUsersAPI = (query) => {

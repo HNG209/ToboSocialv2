@@ -46,10 +46,10 @@ export const login = createAsyncThunk(
 // Follow
 export const followUser = createAsyncThunk(
   "auth/followUser",
-  async ({ targetUserId, currentUserId }, { rejectWithValue }) => {
+  async (targetUserId, { rejectWithValue }) => {
     try {
-      const response = await followUserAPI(targetUserId, currentUserId);
-      localStorage.setItem("user", JSON.stringify(response.user));
+      const response = await followUserAPI(targetUserId);
+      // localStorage.setItem("user", JSON.stringify(response.user));
       return response.user; // Chỉ trả về user object để cập nhật state
     } catch (error) {
       return rejectWithValue(error.error || "Follow failed");
@@ -60,10 +60,10 @@ export const followUser = createAsyncThunk(
 // Unfollow
 export const unfollowUser = createAsyncThunk(
   "auth/unfollowUser",
-  async ({ targetUserId, currentUserId }, { rejectWithValue }) => {
+  async (targetUserId, { rejectWithValue }) => {
     try {
-      const response = await unfollowUserAPI(targetUserId, currentUserId);
-      localStorage.setItem("user", JSON.stringify(response.user));
+      const response = await unfollowUserAPI(targetUserId);
+      // localStorage.setItem("user", JSON.stringify(response.user));
       return response.user; // Chỉ trả về user object để cập nhật state
     } catch (error) {
       return rejectWithValue(error.error || "Unfollow failed");

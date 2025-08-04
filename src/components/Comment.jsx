@@ -9,7 +9,11 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import React, { forwardRef, useState } from "react";
 import { fetchRepliesComment, toggleCommentLike } from "../redux/post.slice";
-import { deleteComment, updateComment } from "../redux/comment.slice";
+import {
+  deleteComment,
+  fetchRepliedCommentById,
+  updateComment,
+} from "../redux/comment.slice";
 import CommentEditor from "./CommentEditor";
 import Modal from "antd/es/modal/Modal";
 
@@ -70,6 +74,7 @@ const Comment = forwardRef(function CommentRefractor(
   };
 
   const handleGoToRepliedComment = () => {
+    dispatch(fetchRepliedCommentById(comment.replyTo)); // TODO: kiểm tra đã có chưa để tránh gọi api nhiều lần
     // trỏ tới comment được trả lời của comment hiện tại
     if (!setReplied) return;
 

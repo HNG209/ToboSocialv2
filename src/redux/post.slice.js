@@ -20,6 +20,7 @@ import {
 import {
   deleteComment,
   fetchHighLightComments,
+  fetchRepliedCommentById,
   updateComment,
 } from "./comment.slice";
 import { pushUnique } from "../utils/pushUnique";
@@ -311,6 +312,22 @@ const postSlice = createSlice({
       .addCase(fetchHighLightComments.fulfilled, (state, action) => {
         state.highlightComment = action.payload;
         state.comments = pushUnique(state.comments, [action.payload], "_id");
+      })
+
+      .addCase(fetchRepliedCommentById.fulfilled, (state, action) => {
+        const comment = action.payload;
+        const rootIndex = state.comments.findIndex(
+          (c) => c._id === comment.rootComment
+        );
+
+        if (rootIndex === -1) return;
+
+        state.comments[rootIndex].replies = pushUnique(
+          state.comments[rootIndex].replies,
+          [comment],
+          "_id",
+          true // push lên đầu
+        );
       })
 
       // Create comment

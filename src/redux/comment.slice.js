@@ -2,6 +2,7 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import {
   createCommentAPI,
   deleteCommentAPI,
+  fetchCommentByIdAPI,
   fetchHighlightCommentAPI,
   fetchPostCommentsAPI,
   updateCommentAPI,
@@ -13,6 +14,19 @@ export const fetchPostComments = createAsyncThunk(
     try {
       const response = await fetchPostCommentsAPI(postId);
       return { postId, comments: response }; //payload
+    } catch (error) {
+      console.error("Error in fetchComments:", error.message);
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+export const fetchRepliedCommentById = createAsyncThunk(
+  "comment/fetchRepliedCommentById",
+  async (commentId, { rejectWithValue }) => {
+    try {
+      const response = await fetchCommentByIdAPI(commentId);
+      return response;
     } catch (error) {
       console.error("Error in fetchComments:", error.message);
       return rejectWithValue(error.message);
