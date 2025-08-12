@@ -96,13 +96,13 @@ const ProfilePage = () => {
               <a href="#" className="font-semibold hover:text-gray-500">
                 Followers:{" "}
               </a>
-              <span className="text-gray-500">{userData?.countFollower}</span>
+              <span className="text-gray-500">{userData?.followersCount}</span>
             </div>
             <div className="mr-4">
               <a href="#" className="font-semibold hover:text-gray-500">
                 Following:{" "}
               </a>
-              <span className="text-gray-500">{userData?.countFollowing}</span>
+              <span className="text-gray-500">{userData?.followingCount}</span>
             </div>
             <div>
               <a href="#" className="font-semibold hover:text-gray-500">

@@ -32,7 +32,7 @@ export const fetchMoreNotifications = createAsyncThunk(
   async (_, { getState, rejectWithValue }) => {
     try {
       const state = getState();
-      const page = state.notification.page || 1;
+      const page = state.notification.page || 2; // Mặc định là trang 2 nếu không có giá trị
       const fetchMore = state.notification.fetchMore;
 
       if (!fetchMore) return [];
@@ -51,7 +51,7 @@ const notificationSlice = createSlice({
   initialState: {
     notifications: [],
     unRead: 0,
-    page: 1,
+    page: 2,
     fetchMore: true,
     status: "idle",
   },

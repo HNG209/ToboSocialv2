@@ -15,13 +15,11 @@ const updateUserAPI = (data) => {
   return axios.put(URL_BACKEND, data);
 };
 
-// API theo dõi người dùng
 const followUserAPI = (targetUserId) => {
   const URL_BACKEND = `/v1/api/follow/${targetUserId}`;
   return axios.post(URL_BACKEND);
 };
 
-// API bỏ theo dõi người dùng
 const unfollowUserAPI = (targetUserId) => {
   const URL_BACKEND = `/v1/api/unfollow/${targetUserId}`;
   return axios.delete(URL_BACKEND);

@@ -36,7 +36,7 @@ const Sidebar = () => {
 
     socket.on("notify", (data) => {
       dispatch(appendNotification(data));
-      message.info("[Socket] " + data.message);
+      message.info(data.fromUser.username + " " + data.message);
     });
 
     return () => {

@@ -11,13 +11,10 @@ const Notification = ({ notification, onClick }) => {
 
   const isUnread = notification?.isRead === false;
 
-  useEffect(() => {
-    console.log("notif ne", notification);
-  }, []);
-
   const handleNotificationClick = () => {
     if (!notification.path) return;
 
+    console.log(notification);
     const queryString =
       "?" +
       notification.path
@@ -30,7 +27,7 @@ const Notification = ({ notification, onClick }) => {
     const to =
       "/" +
       notification.target.model +
-      "s/" +
+      "/" +
       notification.target.id +
       queryString;
 
