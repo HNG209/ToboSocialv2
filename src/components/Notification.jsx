@@ -2,7 +2,6 @@ import { Avatar } from "antd";
 import { useDispatch } from "react-redux";
 import { markAsRead } from "../redux/notification.slice";
 import { formatTime } from "./Comment";
-import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 const Notification = ({ notification, onClick }) => {

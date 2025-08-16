@@ -60,13 +60,8 @@ function RegisterPage() {
         navigate("/login");
       }, 1500);
     } catch (err) {
-      console.error(err);
       // Handle specific errors (e.g., username/email already exists)
-      setModalMessage(
-        err.message.includes("username") || err.message.includes("email")
-          ? "Tên đăng nhập hoặc email đã tồn tại. Vui lòng chọn giá trị khác!"
-          : "Có lỗi xảy ra khi đăng ký!"
-      );
+      setModalMessage(err);
       setShowModal(true);
     }
   };

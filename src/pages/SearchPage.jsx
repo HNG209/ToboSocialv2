@@ -1,74 +1,113 @@
 import { useState, useEffect } from "react";
-import { Input, Avatar } from "antd";
+import { Input, List, Typography, Row, Col, Card, Button } from "antd";
+import styled from "styled-components";
 import debounce from "lodash.debounce";
-import { Link } from "react-router-dom";
-import { useSelector } from "react-redux";
-import { searchUsersAPI } from "../services/user.service";
+import UserCard from "../components/UserCard";
+import useProfileNavigate from "../hooks/useProfileNavigate";
+import { useFetchUser } from "../hooks/useFetchUser";
+
+const { Text } = Typography;
+
+const SearchContainer = styled.div`
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 16px;
+  background: #f5f5f5;
+  min-height: 100vh;
+`;
+
+const Header = styled(Row)`
+  padding: 12px 16px;
+  background: #fff;
+  border-bottom: 1px solid #e8e8e8;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+`;
 
 const SearchPage = () => {
-  const [query, setQuery] = useState("");
-  const [results, setResults] = useState([]);
-  const currentUser = useSelector((state) => state.auth.user);
-  const currentUserId = currentUser?._id;
+  const [queryString, setQueryString] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [users, hasNext, setQuery, fetchNext] = useFetchUser();
+
+  const navigate = useProfileNavigate();
 
   const handleSearch = debounce(async (val) => {
     if (!val) {
-      setResults([]);
+      setLoading(false);
       return;
     }
-    try {
-      const res = await searchUsersAPI(val);
-      const filtered = res.filter((user) => user._id !== currentUserId);
-      setResults(filtered || []);
-    } catch (error) {
-      console.error("Search error:", error);
-      setResults([]);
-    }
+
+    setLoading(true);
+    setQuery(val);
+    setLoading(false);
   }, 400);
 
   useEffect(() => {
-    handleSearch(query);
+    handleSearch(queryString);
     return () => handleSearch.cancel();
-  }, [query]);
+  }, [queryString]);
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-semibold mb-4">Search Users</h1>
-      <Input
-        placeholder="Enter username or full name..."
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        size="large"
-        allowClear
-        className="mb-6"
-      />
-
-      {results.length === 0 && query && (
-        <p className="text-gray-500">No matching results found.</p>
-      )}
-
-      <div className="space-y-4">
-        {results.map((user) => (
-          <Link
-            to={`/profile/${user.username}`}
-            key={user._id}
-            className="flex items-center gap-4 p-3 hover:bg-gray-100 rounded transition"
-          >
-            <Avatar
-              size={48}
-              src={
+    <SearchContainer>
+      <Header justify="space-between" align="middle">
+        <Col>
+          <Text strong style={{ fontSize: 20 }}>
+            Tìm kiếm người dùng
+          </Text>
+        </Col>
+      </Header>
+      <div className="bg-white p-4">
+        <Input
+          placeholder="Nhập username hoặc họ tên..."
+          value={queryString}
+          onChange={(e) => setQueryString(e.target.value)}
+          size="medium"
+          allowClear
+          className="mb-2"
+        />
+      </div>
+      {users.length === 0 && queryString && !loading ? (
+        <Text
+          type="secondary"
+          style={{ display: "block", textAlign: "center", marginTop: 20 }}
+        >
+          Không tìm thấy người dùng phù hợp
+        </Text>
+      ) : (
+        <List
+          loading={loading}
+          dataSource={users}
+          renderItem={(user) => (
+            <UserCard
+              onClick={() => navigate(user._id)}
+              key={user._id}
+              avatar={
                 user.profile?.avatar ||
                 `https://i.pravatar.cc/150?u=${user._id}`
               }
+              username={user.username}
+              fullname={user.fullName}
             />
-            <div>
-              <div className="font-medium">{user.username}</div>
-              <div className="text-gray-500">{user.fullName}</div>
-            </div>
-          </Link>
-        ))}
-      </div>
-    </div>
+          )}
+          loadMore={
+            hasNext ? (
+              <div style={{ textAlign: "center", margin: "16px 0" }}>
+                <Button onClick={fetchNext} type="default">
+                  Tải thêm
+                </Button>
+              </div>
+            ) : (
+              <div className="text-center text-xs text-gray-400">
+                không có thêm kết quả
+              </div>
+            )
+          }
+          style={{ marginTop: 12 }}
+        />
+      )}
+    </SearchContainer>
   );
 };
 

@@ -8,7 +8,7 @@ const loginAPI = async (username, password) => {
 
 // Đăng ký
 const registerAPI = async (username, email, password, fullName) => {
-  const URL_BACKEND = `/v1/api/users/register`;
+  const URL_BACKEND = `/v1/api/register`;
   return axios.post(URL_BACKEND, { username, email, password, fullName });
 };
 
@@ -25,7 +25,8 @@ const forgotPasswordAPI = (email) => {
 };
 
 const updateUserPasswordAPI = async (data) => {
-  return axios.put("/v1/api/admin/account/password", data);
+  const URL_BACKEND = `/v1/api/password`;
+  return axios.put(URL_BACKEND, data);
 };
 
 // const searchUsersAPI = (query) => {

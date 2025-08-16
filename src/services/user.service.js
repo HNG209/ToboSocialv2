@@ -25,8 +25,10 @@ const unfollowUserAPI = (targetUserId) => {
   return axios.delete(URL_BACKEND);
 };
 
-const searchUsersAPI = (query) => {
-  const URL = `/v1/api/search?q=${encodeURIComponent(query)}`;
+const searchUsersAPI = (query, page = 1, limit = 10) => {
+  const URL = `/v1/api/search?q=${encodeURIComponent(
+    query
+  )}&page=${page}&limit=${limit}`;
   return axios.get(URL);
 };
 

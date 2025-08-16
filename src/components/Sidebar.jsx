@@ -7,6 +7,7 @@ import {
   PlusOutlined,
   UserOutlined,
   MenuOutlined,
+  GlobalOutlined,
 } from "@ant-design/icons";
 import { Badge, Dropdown, Menu, message, notification } from "antd";
 import { NavLink, useNavigate } from "react-router-dom";
@@ -16,6 +17,7 @@ import tobologo from "../assets/logo.png";
 import socket from "../socket/socket";
 import { getAuthUser, logout } from "../redux/auth.slice";
 import { appendNotification } from "../redux/notification.slice";
+import { label } from "framer-motion/client";
 
 // Sidebar khi kích thước md, lg
 const Sidebar = () => {
@@ -84,6 +86,7 @@ const Sidebar = () => {
 
   const menuItems = [
     { icon: <HomeOutlined />, label: "Home", to: "/" },
+    { icon: <GlobalOutlined />, label: "Discover", to: "/discover" },
     { icon: <SearchOutlined />, label: "Search", to: "/search" },
     {
       icon: <BellOutlined />,

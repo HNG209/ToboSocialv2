@@ -75,7 +75,6 @@ const ChangePasswordPage = () => {
     setLoading(true);
     try {
       const data = {
-        _id: user._id,
         currentPassword: values.currentPassword,
         newPassword: values.newPassword,
       };
