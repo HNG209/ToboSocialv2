@@ -10,6 +10,8 @@ export default function useFetchPost(id) {
   const [postId, setPostId] = useState(id);
   const dispatch = useDispatch();
   const post = useSelector((state) => state.post.current);
+  const status = useSelector((state) => state.post.status);
+  const error = useSelector((state) => state.post.error);
 
   useEffect(() => {
     if (postId) {
@@ -19,5 +21,5 @@ export default function useFetchPost(id) {
     }
   }, [postId, dispatch]);
 
-  return [post, setPostId];
+  return [post, setPostId, status, error];
 }

@@ -62,7 +62,7 @@ const PostDetailPage = ({ onClose, postId, root, replyTo, commentId }) => {
   const [replyToComment, setReplyToComment] = useState(null);
   const [isOptionsModalOpen, setIsOptionsModalOpen] = useState(false);
 
-  const [postDetail] = useFetchPost(postId); // custom hook
+  const [postDetail, setPostId, status, error] = useFetchPost(postId); // custom hook
   const [setRoot, setReplyTo, setCommentId] = useFetchHighlightComment(
     root,
     replyTo,
@@ -71,7 +71,6 @@ const PostDetailPage = ({ onClose, postId, root, replyTo, commentId }) => {
   const authUser = useSelector((state) => state.auth.user);
   const postComments = useSelector((state) => state.post.comments);
   const likeStatus = useSelector((state) => state.post.current.isLiked);
-  const status = useSelector((state) => state.post.status);
   const commentLoading = useSelector(
     (state) => state.post.isLoadingMoreComments
   );
@@ -83,14 +82,12 @@ const PostDetailPage = ({ onClose, postId, root, replyTo, commentId }) => {
   const handleOptionsClick = () => setIsOptionsModalOpen(true);
   const handleOptionsClose = () => setIsOptionsModalOpen(false);
 
-  // useEffect(() => {
-  //   dispatch(
-  //     fetchHighLightComments({
-  //       root: "6889f206a872c45718cb08dd",
-  //       lv1: "688b3b3bd312b020877e66c4",
-  //     })
-  //   );
-  // }, []);
+  useEffect(() => {
+    if (status === "failed") {
+      message.error(error);
+      onClose();
+    }
+  }, [status, error]);
 
   const handleDeletePost = () => {
     Modal.confirm({

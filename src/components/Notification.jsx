@@ -11,12 +11,11 @@ const Notification = ({ notification, onClick }) => {
   const isUnread = notification?.isRead === false;
 
   const handleNotificationClick = () => {
-    if (!notification.path) return;
+    if (!notification.query) return;
 
-    console.log(notification);
     const queryString =
       "?" +
-      notification.path
+      notification.query
         .map(
           (item) =>
             `${encodeURIComponent(item.key)}=${encodeURIComponent(item.value)}`
@@ -25,9 +24,9 @@ const Notification = ({ notification, onClick }) => {
 
     const to =
       "/" +
-      notification.target.model +
+      notification.path.name +
       "/" +
-      notification.target.id +
+      notification.path.id +
       queryString;
 
     navigate(to);

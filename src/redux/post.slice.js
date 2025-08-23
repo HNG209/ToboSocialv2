@@ -24,6 +24,7 @@ import {
   updateComment,
 } from "./comment.slice";
 import { pushUnique } from "../utils/pushUnique";
+import { s } from "framer-motion/client";
 
 export const createPost = createAsyncThunk(
   "post/createPost",
@@ -87,9 +88,9 @@ export const fetchMoreComments = createAsyncThunk(
   async (_, { getState, rejectWithValue }) => {
     try {
       const state = getState();
-      const currentPage = state.selectedPost.page;
-      const postId = state.selectedPost.post._id;
-      const fetchMore = state.selectedPost.fetchMore;
+      const currentPage = state.post.page;
+      const postId = state.post.current._id;
+      const fetchMore = state.post?.fetchMore;
 
       if (!fetchMore) return { commentsResponse: [], nextPage: currentPage };
 
@@ -256,11 +257,28 @@ const postSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      .addCase(fetchPost.pending, (state) => {
+        state.status = "loading";
+      })
       .addCase(fetchPost.fulfilled, (state, action) => {
         state.current = action.payload;
+        state.status = "succeeded";
+      })
+      .addCase(fetchPost.rejected, (state, action) => {
+        state.error = action.payload;
+        state.status = "failed";
+      })
+
+      .addCase(fetchPostAuthor.pending, (state) => {
+        state.status = "loading";
       })
       .addCase(fetchPostAuthor.fulfilled, (state, action) => {
         state.author = action.payload;
+        state.status = "succeeded";
+      })
+      .addCase(fetchPostAuthor.rejected, (state, action) => {
+        state.error = action.payload;
+        state.status = "failed";
       })
 
       // ===== Fetch Posts by User =====
@@ -282,13 +300,14 @@ const postSlice = createSlice({
         state.status = "failed"; // Đặt trạng thái thành failed
         state.error = action.payload; // Lưu lỗi nếu có
       })
+
+      // Fetch more comments
       .addCase(fetchMoreComments.pending, (state) => {
         state.isLoadingMoreComments = true;
         state.status = "loading"; // Đặt trạng thái thành loading
       })
-
-      // fetch more comments(page > 1)
       .addCase(fetchMoreComments.fulfilled, (state, action) => {
+        // fetch more comments(page > 1)
         const { commentsResponse, nextPage } = action.payload;
 
         if (commentsResponse.length === 0) {
@@ -309,11 +328,24 @@ const postSlice = createSlice({
       })
 
       // Fetch highlight comment
+      .addCase(fetchHighLightComments.pending, (state) => {
+        state.status = "loading";
+      })
       .addCase(fetchHighLightComments.fulfilled, (state, action) => {
+        if(action.payload === null) return; // nếu không có comment highlight thì không làm gì cả
         state.highlightComment = action.payload;
         state.comments = pushUnique(state.comments, [action.payload], "_id");
+        state.status = "succeeded";
+      })
+      .addCase(fetchHighLightComments.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
       })
 
+      // Fetch replied comment by id
+      .addCase(fetchRepliedCommentById.pending, (state) => {
+        state.status = "loading";
+      })
       .addCase(fetchRepliedCommentById.fulfilled, (state, action) => {
         const comment = action.payload;
         const rootIndex = state.comments.findIndex(
@@ -328,6 +360,11 @@ const postSlice = createSlice({
           "_id",
           true // push lên đầu
         );
+        state.status = "succeeded";
+      })
+      .addCase(fetchRepliedCommentById.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
       })
 
       // Create comment
@@ -361,11 +398,11 @@ const postSlice = createSlice({
       .addCase(createComment.rejected, (state, action) => {
         state.error = action.payload;
       })
+
+      // Fetch replies comment
       .addCase(fetchRepliesComment.pending, (state) => {
         state.status = "loading"; // Đặt trạng thái thành loading
       })
-
-      // Fetch replies comment
       .addCase(fetchRepliesComment.fulfilled, (state, action) => {
         const { commentId, replies } = action.payload;
 
@@ -387,6 +424,10 @@ const postSlice = createSlice({
         state.comments[commentIndex].pagination = replies.pagination;
 
         state.status = "succeeded";
+      })
+      .addCase(fetchRepliesComment.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
       })
 
       // Toggle post like
@@ -432,6 +473,9 @@ const postSlice = createSlice({
       })
 
       // Delete comment (lắng nghe bên comment slice)
+      .addCase(deleteComment.pending, (state) => {
+        state.status = "loading";
+      })
       .addCase(deleteComment.fulfilled, (state, action) => {
         const {
           commentId,
@@ -451,16 +495,33 @@ const postSlice = createSlice({
             ].replies.filter((c) => c._id !== commentId);
           }
         }
+        state.status = "succeeded";
+      })
+      .addCase(deleteComment.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
       })
 
       // Update comment (lắng nghe bên comment slice)
+      .addCase(updateComment.pending, (state) => {
+        state.status = "loading";
+      })
       .addCase(updateComment.fulfilled, (state, action) => {
         const newComment = action.payload.comment;
 
         const index = state.comments.findIndex((c) => c._id === newComment.id);
-        if (index === -1) return;
+        if (index === -1) {
+          state.status = "failed";
+          return;
+        };
 
         state.comments[index].text = newComment.text;
+
+        state.status = "succeeded";
+      })
+      .addCase(updateComment.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
       });
   },
 });

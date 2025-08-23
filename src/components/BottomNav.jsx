@@ -5,6 +5,7 @@ import {
   PlusOutlined,
   UserOutlined,
   BellOutlined,
+  GlobalOutlined,
 } from "@ant-design/icons";
 import { NavLink } from "react-router-dom";
 
@@ -15,6 +16,11 @@ const BottomNav = () => {
       icon: <HomeOutlined style={{ fontSize: "24px" }} />,
       label: "Home",
       to: "/",
+    },
+    {
+      icon: <GlobalOutlined style={{ fontSize: "24px" }} />,
+      label: "Discover",
+      to: "/discover",
     },
     {
       icon: <SearchOutlined style={{ fontSize: "24px" }} />,

@@ -17,7 +17,6 @@ import tobologo from "../assets/logo.png";
 import socket from "../socket/socket";
 import { getAuthUser, logout } from "../redux/auth.slice";
 import { appendNotification } from "../redux/notification.slice";
-import { label } from "framer-motion/client";
 
 // Sidebar khi kích thước md, lg
 const Sidebar = () => {

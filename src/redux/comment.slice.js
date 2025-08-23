@@ -78,6 +78,7 @@ export const fetchHighLightComments = createAsyncThunk(
   "post/fetchHighLightComments",
   async ({ root, lv1, lv2 }, { rejectWithValue }) => {
     try {
+      if(!root) return null;
       const rs = await fetchHighlightCommentAPI(root, lv1, lv2);
 
       return rs;
