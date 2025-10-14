@@ -4,12 +4,26 @@ import { toggleLike } from "./post.slice";
 
 export const fetchUserFeed = createAsyncThunk(
   "feed/fetchUserFeed",
-  async ({ page, limit }, { rejectWithValue }) => {
+  async (_, { rejectWithValue }) => {
     try {
-      const result = await fetchUserFeedAPI(page, limit);
+      const result = await fetchUserFeedAPI(null, 2);
       return result;
     } catch (error) {
       console.error("Error in fetchPostByUser:", error.message);
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+// fetch more posts
+export const fetchMorePosts = createAsyncThunk(
+  "feed/fetchMorePosts",
+  async ({ cursor, limit }, { rejectWithValue }) => {
+    try {
+      const result = await fetchUserFeedAPI(cursor, limit);
+      return result;
+    } catch (error) {
+      console.error("Error in fetchMorePosts:", error.message);
       return rejectWithValue(error.message);
     }
   }
@@ -32,6 +46,23 @@ const feedSlice = createSlice({
       })
       .addCase(fetchUserFeed.fulfilled, (state, action) => {
         state.posts = action.payload;
+        state.status = "succeeded";
+      })
+      .addCase(fetchUserFeed.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
+      })
+
+      .addCase(fetchMorePosts.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(fetchMorePosts.fulfilled, (state, action) => {
+        state.posts = [...state.posts, ...action.payload];
+        state.status = "succeeded";
+      })
+      .addCase(fetchMorePosts.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
       })
 
       .addCase(toggleLike.fulfilled, (state, action) => {

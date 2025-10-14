@@ -149,7 +149,7 @@ const PostDetailPage = ({ onClose, postId, root, replyTo, commentId }) => {
   const handleCommentChange = (e) => setComment(e.target.value);
 
   const handleCommentPost = async () => {
-    await dispatch(
+    dispatch(
       createComment({
         post: postDetail._id,
         text: comment,

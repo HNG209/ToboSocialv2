@@ -1,95 +1,82 @@
-import { useEffect, useRef, useCallback } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useEffect, useRef } from "react";
 import PostCard from "../components/postCard";
-import { fetchUserFeed } from "../redux/feed.slice";
+import { message, Spin } from "antd";
+import useFeed from "../hooks/useFeed";
 
 function HomePage() {
-  const dispatch = useDispatch();
-  const posts = useSelector((state) => state.feed.posts);
-  // const posts = [];
-  //   const status = useSelector((state) => state.posts.status);
-  //   const currentPage = useSelector((state) => state.posts.currentPage);
-  //   const hasMore = useSelector((state) => state.posts.hasMore);
-  const userId = useSelector((state) => state.auth.user?._id);
-
-  const observer = useRef();
-
-  // Callback for Intersection Observer
-  const lastPostElementRef = useCallback((node) => {
-    if (status === "loading") return;
-    if (observer.current) observer.current.disconnect();
-
-    observer.current = new IntersectionObserver((entries) => {
-      //   if (entries[0].isIntersecting && hasMore) {
-      //     //   dispatch(fetchPosts({ page: currentPage + 1 }));
-      //   }
-    });
-
-    if (node) observer.current.observe(node);
-  }, []);
+  const { posts, status, userId, fetchMore } = useFeed();
+  // ref cho sentinel (thẻ rỗng ở cuối danh sách để observe)
+  const sentinelRef = useRef(null);
+  // guard để tránh gọi fetch trùng cho cùng cursor
+  const lastFetchedCursorRef = useRef(null);
 
   useEffect(() => {
-    dispatch(fetchUserFeed({ page: 1, limit: 10 }));
-  }, [dispatch]);
+    const sentinelEl = sentinelRef.current;
+    if (!sentinelEl) return;
 
-  // const showLoginNotification = () => {
-  //   notification.warning({
-  //     message: "Authentication Required",
-  //     description:
-  //       "Please log in to interact with posts, or continue viewing without interaction.",
-  //     placement: "topRight",
-  //     duration: 0, // Keep notification open until user interacts
-  //     btn: (
-  //       <div className="flex gap-2">
-  //         <Button
-  //           type="primary"
-  //           onClick={() => {
-  //             notification.destroy();
-  //             navigate("/login");
-  //           }}
-  //         >
-  //           Log In
-  //         </Button>
-  //         <Button onClick={() => notification.destroy()}>
-  //           Continue Viewing
-  //         </Button>
-  //       </div>
-  //     ),
-  //   });
-  // };
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const ent = entries[0];
+        if (!ent.isIntersecting) return;
+
+        // không fetch nếu đang loading
+        if (status === "loading") return;
+
+        // compute cursor from last post
+        const lastPostScore = posts.length
+          ? posts[posts.length - 1].score
+          : null;
+
+        // nếu đã fetch cho cursor này thì skip
+        if (lastFetchedCursorRef.current === lastPostScore) return;
+
+        // set guard và dispatch fetch thêm
+        lastFetchedCursorRef.current = lastPostScore;
+        fetchMore();
+        // console.log("Fetching more posts with cursor:", lastPostScore);
+      },
+      {
+        root: null,
+        rootMargin: "300px", // trigger sớm khi còn 300px tới cuối
+        threshold: 0,
+      }
+    );
+
+    observer.observe(sentinelEl);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [posts, status]);
 
   return (
     <div className="flex justify-center bg-white">
       <div className="w-full max-w-[630px] border-x border-gray-200 min-h-screen">
         {status === "loading" && posts.length === 0 && (
-          <p className="loading">Loading posts...</p>
+          <div className="flex justify-center mt-10 h-full">
+            <Spin />
+          </div>
         )}
+
         {posts.length > 0 &&
-          posts.map((post, index) => {
-            // Attach ref to the last post for Intersection Observer
-            if (index === posts.length - 1) {
-              return (
-                <div ref={lastPostElementRef} key={post._id}>
-                  <PostCard
-                    post={post}
-                    userId={userId}
-                  />
-                </div>
-              );
-            }
-            return (
-              <PostCard
-                key={post._id}
-                post={post}
-                userId={userId}
-              />
-            );
-          })}
+          posts.map((post, index) => (
+            <PostCard key={post._id} post={post} userId={userId} />
+          ))}
+
         {status === "loading" && posts.length > 0 && (
-          <p className="loading">Loading more posts...</p>
+          <div className="flex justify-center my-2">
+            <Spin />
+          </div>
         )}
-        {status === "failed" && <p className="error">Error loading posts</p>}
-        {posts.length > 0 && <p className="loading">No more posts to load</p>}
+
+        {status === "failed" && message.error("Error loading posts")}
+
+        {/* sentinel: invisible element observed để trigger load thêm */}
+        <div ref={sentinelRef} style={{ height: 1 }} />
+
+        {posts.length > 0 && status !== "loading" && (
+          <p className="text-center text-sm text-gray-400">Cuộn để tải thêm</p>
+        )}
       </div>
     </div>
   );

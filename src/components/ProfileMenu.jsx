@@ -3,6 +3,7 @@ import {
   AppstoreOutlined,
   PlaySquareOutlined,
   NotificationOutlined,
+  SendOutlined,
 } from "@ant-design/icons";
 import { Menu } from "antd";
 import { FiBookmark } from "react-icons/fi";
@@ -13,9 +14,9 @@ const items = [
     icon: <AppstoreOutlined />,
   },
   {
-    label: "Reels",
-    key: "reels",
-    icon: <PlaySquareOutlined />,
+    label: "Shared",
+    key: "shared",
+    icon: <SendOutlined />,
   },
   {
     label: "Saved",
@@ -24,16 +25,15 @@ const items = [
   },
   {
     label: "Tags",
-    key: "Tags",
+    key: "tags",
     icon: <NotificationOutlined />,
   },
 ];
-const ProfileMenu = () => {
-  const [current, setCurrent] = useState("posts");
+const ProfileMenu = ({ current, setCurrent }) => {
   const onClick = (e) => {
-    console.log("click ", e);
     setCurrent(e.key);
   };
+
   return (
     <Menu
       style={{ backgroundColor: "#f9fafb", color: "#fff" }}

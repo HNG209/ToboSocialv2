@@ -14,6 +14,7 @@ export default function useFetchPost(id) {
   const error = useSelector((state) => state.post.error);
 
   useEffect(() => {
+    console.log("useFetchPost: postId changed to", postId);
     if (postId) {
       dispatch(fetchPostAuthor(postId));
       dispatch(fetchPost(postId));

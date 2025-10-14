@@ -10,12 +10,22 @@ export default function PostThumb({ post }) {
     <>
       <div className="relative rounded-lg overflow-hidden group shadow-md aspect-square w-full">
         {/* Image */}
-        <img
-          src={post?.mediaFiles[0]?.url || "https://via.placeholder.com/300"}
-          alt="post"
-          className="w-full h-full object-cover"
-        />
-
+        {post.type === "shared" ? (
+          <img
+            src={
+              post?.originalPost?.mediaFiles[0]?.url ||
+              "https://via.placeholder.com/300"
+            }
+            alt="post"
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <img
+            src={post?.mediaFiles[0]?.url || "https://via.placeholder.com/300"}
+            alt="post"
+            className="w-full h-full object-cover"
+          />
+        )}
         {/* Hover overlay */}
         <div
           onClick={() => {
@@ -31,7 +41,7 @@ export default function PostThumb({ post }) {
             </div>
             <div className="flex items-center gap-1">
               <MessageOutlined />
-              <span>{post?.comments.length}</span>
+              <span>{post?.commentCount}</span>
             </div>
           </div>
         </div>

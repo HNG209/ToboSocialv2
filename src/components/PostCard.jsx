@@ -7,6 +7,7 @@ import {
   Dropdown,
   notification,
   Select,
+  message,
 } from "antd";
 import {
   HeartOutlined,
@@ -31,6 +32,8 @@ import ProfileCard from "./ProfileCard ";
 import PostDetailPage from "../pages/PostDetailPage";
 import useProfileNavigate from "../hooks/useProfileNavigate";
 import { toggleLike } from "../redux/post.slice";
+import { sharePostAPI } from "../services/share.service";
+import ShareCard from "./ShareCard";
 
 // Hàm tính thời gian
 const timeAgo = (date, referenceTime) => {
@@ -449,20 +452,22 @@ function PostCard({ post: initialPost, userId }) {
         onCancel={handleShareModalCancel}
         footer={null}
         centered
-        width={400}
       >
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center bg-gray-100 p-2 rounded">
-            <Input
-              value={shareLink}
-              readOnly
-              className="flex-1 mr-2 border-none bg-transparent"
-            />
-            <Button type="primary" onClick={() => copyToClipboard(shareLink)}>
-              Copy
-            </Button>
-          </div>
-        </div>
+        <ShareCard
+          initialCaption={post.caption}
+          onShare={async (caption) => {
+            // Call the share API with the caption
+            await sharePostAPI(post._id, caption)
+              .then(() => {
+                message.success("Post shared successfully!");
+                setIsShareModalVisible(false);
+              })
+              .catch((error) => {
+                message.error(error.message || "Failed to share the post.");
+                console.error("SharePost error:", error);
+              });
+          }}
+        />
       </Modal>
 
       <Modal
@@ -570,15 +575,6 @@ function PostCard({ post: initialPost, userId }) {
         </span>
         <span className="text-black">{post.caption}</span>
       </div>
-
-      {/* Optional: Show a preview of comments */}
-      {post.comments.length > 0 && (
-        <div className="px-3 text-sm text-gray-600">
-          <div className="cursor-pointer">
-            View all {post.comments.length} comments
-          </div>
-        </div>
-      )}
     </div>
   );
 }

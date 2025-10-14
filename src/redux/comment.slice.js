@@ -15,7 +15,7 @@ export const fetchPostComments = createAsyncThunk(
       const response = await fetchPostCommentsAPI(postId);
       return { postId, comments: response }; //payload
     } catch (error) {
-      console.error("Error in fetchComments:", error.message);
+      console.error("Error in fetching comments:", error.message);
       return rejectWithValue(error.message);
     }
   }
@@ -28,7 +28,7 @@ export const fetchRepliedCommentById = createAsyncThunk(
       const response = await fetchCommentByIdAPI(commentId);
       return response;
     } catch (error) {
-      console.error("Error in fetchComments:", error.message);
+      console.error("Error in fetching comment by ID:", error.message);
       return rejectWithValue(error.message);
     }
   }
@@ -41,7 +41,7 @@ export const createComment = createAsyncThunk(
       const response = await createCommentAPI(postId, text);
       return response; //payload
     } catch (error) {
-      console.error("Error in createComment:", error.message);
+      console.error("Error in creating comment:", error.message);
       return rejectWithValue(error.message);
     }
   }
@@ -54,7 +54,7 @@ export const updateComment = createAsyncThunk(
       const response = await updateCommentAPI(comment);
       return response; //payload
     } catch (error) {
-      console.error("Error in updateComment:", error.message);
+      console.error("Error in updating comment:", error.message);
       return rejectWithValue(error.message);
     }
   }
@@ -68,7 +68,7 @@ export const deleteComment = createAsyncThunk(
 
       return { rs, commentId };
     } catch (error) {
-      console.error("Error in deleteComment:", error.message);
+      console.error("Error in deleting comment:", error.message);
       return rejectWithValue(error.message);
     }
   }
@@ -83,7 +83,7 @@ export const fetchHighLightComments = createAsyncThunk(
 
       return rs;
     } catch (error) {
-      console.error("Error in fetching post detail:", error.message);
+      console.error("Error in fetching highlight comments:", error.message);
       return rejectWithValue(error.message);
     }
   }

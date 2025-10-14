@@ -69,7 +69,6 @@ instance.interceptors.response.use(
           "http://localhost:8081/v1/api/auth/refresh",
           { withCredentials: true }
         );
-        console.log("toi day");
 
         const newAccessToken = response.data.accessToken;
         localStorage.setItem("accessToken", newAccessToken);

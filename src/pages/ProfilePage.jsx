@@ -13,6 +13,7 @@ import ProfileMenu from "../components/ProfileMenu";
 import PostThumb from "../components/PostThumb";
 import {
   fetchPostByUser,
+  fetchSharedPostByUser,
   followUser,
   getCurrentUser,
   setStatus,
@@ -24,6 +25,7 @@ const ProfilePage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState(""); // 'self' | 'other'
   const [userData, setUserData] = useState(null);
+  const [tab, setTab] = useState("posts"); // 'posts' | 'shared' | 'tags'
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -35,11 +37,15 @@ const ProfilePage = () => {
 
   useEffect(() => {
     if (status !== "idle") return;
-    dispatch(fetchPostByUser({ id, page: 1, limit: 10 }));
+    if (tab === "shared") {
+      dispatch(fetchSharedPostByUser({ id, page: 1, limit: 10 }));
+    } else {
+      dispatch(fetchPostByUser({ id, page: 1, limit: 10 }));
+    }
     if (!id) return;
     dispatch(getCurrentUser({ id }));
     return;
-  }, [dispatch, status]);
+  }, [dispatch, tab, status]);
 
   useEffect(() => {
     if (!authUser && !profileUser) return;
@@ -49,7 +55,7 @@ const ProfilePage = () => {
 
   useEffect(() => {
     dispatch(setStatus("idle"));
-  }, [id]);
+  }, [id, tab, dispatch]);
 
   const showModal = (type) => {
     setModalType(type); // 'self' or 'other'
@@ -229,7 +235,7 @@ const ProfilePage = () => {
       </Modal>
 
       <div>
-        <ProfileMenu />
+        <ProfileMenu current={tab} setCurrent={setTab} />
       </div>
 
       <div>

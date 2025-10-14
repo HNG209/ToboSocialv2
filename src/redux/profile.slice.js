@@ -9,6 +9,10 @@ import {
   unfollowUserAPI,
   updateUserAPI,
 } from "../services/user.service";
+import {
+  fetchProfileSharedPosts,
+  fetchSharedPostByUserAPI,
+} from "../services/share.service";
 import { createPost, deletePost, toggleLike, updatePost } from "./post.slice";
 
 export const fetchPostByUser = createAsyncThunk(
@@ -19,6 +23,19 @@ export const fetchPostByUser = createAsyncThunk(
       return await fetchProfilePosts(page, limit);
     } catch (error) {
       console.error("Error in fetchPostByUser:", error.message);
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+export const fetchSharedPostByUser = createAsyncThunk(
+  "profile/fetchSharedPostByUser",
+  async ({ id, page, limit }, { rejectWithValue }) => {
+    try {
+      if (id) return await fetchSharedPostByUserAPI(id, page, limit);
+      return await fetchProfileSharedPosts(page, limit);
+    } catch (error) {
+      console.error("Error in fetchSharedPostByUser:", error.message);
       return rejectWithValue(error.message);
     }
   }
@@ -79,6 +96,7 @@ export const unfollowUser = createAsyncThunk(
 const initialState = {
   user: null, // Thông tin người dùng hiện tại
   posts: [], // Danh sách bài viết
+  tab: "posts", // Tab hiện tại (posts | shared | saved | tags)
   postDetail: null, // Chi tiết bài viết
   status: "idle", // Trạng thái tải dữ liệu
   error: null, // Lỗi nếu có
@@ -103,11 +121,10 @@ const profileSlice = createSlice({
       // from post slice
       .addCase(createPost.fulfilled, (state, action) => {
         state.posts.push(action.payload);
-        console.log("fulfilled:", action.payload);
       })
 
       .addCase(updatePost.fulfilled, (state, action) => {
-        console.log("updated:", action.payload);
+        // console.log("updated:", action.payload);
       })
 
       .addCase(toggleLike.fulfilled, (state, action) => {
@@ -125,9 +142,24 @@ const profileSlice = createSlice({
       })
       .addCase(fetchPostByUser.fulfilled, (state, action) => {
         state.status = "succeeded"; // Đặt trạng thái thành succeeded
+        console.log("fetch posts by user:", action.payload);
         state.posts = action.payload; // Gán danh sách bài viết từ API
       })
       .addCase(fetchPostByUser.rejected, (state, action) => {
+        state.status = "failed"; // Đặt trạng thái thành failed
+        state.error = action.payload; // Lưu lỗi nếu có
+      })
+
+      // ===== Fetch Shared Posts by User =====
+      .addCase(fetchSharedPostByUser.pending, (state) => {
+        state.status = "loading"; // Đặt trạng thái thành loading
+      })
+      .addCase(fetchSharedPostByUser.fulfilled, (state, action) => {
+        state.status = "succeeded"; // Đặt trạng thái thành succeeded
+        console.log("Fetched shared posts:", action.payload);
+        state.posts = action.payload.posts; // Gán danh sách bài viết từ API
+      })
+      .addCase(fetchSharedPostByUser.rejected, (state, action) => {
         state.status = "failed"; // Đặt trạng thái thành failed
         state.error = action.payload; // Lưu lỗi nếu có
       })
