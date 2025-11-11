@@ -6,6 +6,7 @@ import {
   registerAPI,
 } from "../services/auth.service";
 import {
+  editProfileAPI,
   followUserAPI,
   getUserProfile,
   unfollowUserAPI,
@@ -20,6 +21,18 @@ export const getAuthUser = createAsyncThunk(
     } catch (error) {
       console.error("Error in getUserById:", error.message);
       return rejectWithValue(error.message);
+    }
+  }
+);
+
+export const editProfile = createAsyncThunk(
+  "auth/editProfile",
+  async (data, { rejectWithValue }) => {
+    try {
+      const response = await editProfileAPI(data);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error.message || "Edit profile failed");
     }
   }
 );
@@ -123,6 +136,22 @@ const authSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
+      // Edit Profile
+      .addCase(editProfile.pending, (state) => {
+        state.status = "loading";
+        state.error = null;
+      })
+      .addCase(editProfile.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        state.user = action.payload; // Cập nhật state.user với user object từ API
+        state.error = null;
+      })
+      .addCase(editProfile.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
+      })
+
+      // Login
       .addCase(login.pending, (state) => {
         state.status = "loading";
         state.error = null;

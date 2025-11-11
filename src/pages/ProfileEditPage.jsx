@@ -27,8 +27,10 @@ import {
   DeleteOutlined,
   SaveOutlined,
 } from "@ant-design/icons";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { editProfileAPI } from "../services/user.service";
+import { useNavigate } from "react-router-dom";
+import { editProfile } from "../redux/auth.slice";
 
 const { Title, Text } = Typography;
 
@@ -80,7 +82,25 @@ const genderOptions = [
 ];
 
 const ProfileEditPage = () => {
+  const dispatch = useDispatch();
   const user = useSelector((state) => state.auth.user);
+  const navigate = useNavigate();
+
+  // Binding lại attributes từ user.introduction (dạng [{key, value, group}]) thành object { group: [ {key, value, group}, ... ] }
+  const initialAttributes = React.useMemo(() => {
+    const intro = user?.introduction || [];
+    const grouped = {};
+    intro.forEach((item) => {
+      if (!grouped[item.group]) grouped[item.group] = [];
+      grouped[item.group].push(item);
+    });
+    return grouped;
+  }, [user]);
+
+  // Danh sách các group đã chọn để hiển thị (từ introduction)
+  const initialActiveGroups = React.useMemo(() => {
+    return Object.keys(initialAttributes);
+  }, [initialAttributes]);
 
   // Avatar & name state
   const [avatar, setAvatar] = useState(
@@ -95,9 +115,9 @@ const ProfileEditPage = () => {
   const fileInputRef = useRef();
 
   // Danh sách các group đã chọn để hiển thị
-  const [activeGroups, setActiveGroups] = useState([]);
+  const [activeGroups, setActiveGroups] = useState(initialActiveGroups);
   // Dữ liệu các thuộc tính từng group
-  const [attributes, setAttributes] = useState({});
+  const [attributes, setAttributes] = useState(initialAttributes);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState("add"); // add | edit
   const [editingAttr, setEditingAttr] = useState(null);
@@ -240,11 +260,18 @@ const ProfileEditPage = () => {
       });
       formData.append("introduction", JSON.stringify(introArr));
 
-      await editProfileAPI(formData);
-      setTimeout(() => {
-        message.success("Cập nhật thành công!");
-        setSaving(false);
-      }, 1200);
+      dispatch(editProfile(formData))
+        .unwrap()
+        .then(() => {
+          navigate(`/profile`);
+          message.success("Cập nhật thành công!");
+        })
+        .catch(() => {
+          message.error("Có lỗi xảy ra khi lưu!");
+        })
+        .finally(() => {
+          setSaving(false);
+        });
     } catch (err) {
       message.error("Có lỗi xảy ra khi lưu!");
       setSaving(false);
@@ -253,6 +280,7 @@ const ProfileEditPage = () => {
 
   return (
     <div className="max-w-xl mx-auto flex flex-col py-6 px-2 bg-white min-h-screen text-[#222]">
+      <div className="text-lg font-semibold mb-4">Thông tin cơ bản</div>
       {/* Header: Avatar + Name + Basic Info */}
       <Card
         className="!rounded-xl !mb-4 !bg-gradient-to-r !from-blue-100 !to-blue-50 !border-0"
@@ -292,7 +320,7 @@ const ProfileEditPage = () => {
               value={displayName}
               onChange={handleNameChange}
               maxLength={50}
-              className="!text-xl !font-bold !bg-white !border-0 !shadow-none !px-0 !py-1 !text-blue-900"
+              className="!text-xl !font-bold !bg-white !border-0 !shadow-none !py-1 !text-blue-900"
               style={{
                 fontSize: 24,
                 fontWeight: 700,
@@ -302,11 +330,6 @@ const ProfileEditPage = () => {
               bordered={false}
               placeholder="Nhập tên hiển thị"
             />
-            <div>
-              <Text type="secondary" className="!text-blue-400">
-                @{user?.username}
-              </Text>
-            </div>
             <div className="mt-2">
               <Input.TextArea
                 value={bio}
@@ -330,6 +353,8 @@ const ProfileEditPage = () => {
           </Col>
         </Row>
       </Card>
+
+      <div className="text-lg font-semibold mb-4">Thông tin giới thiệu</div>
 
       {/* Nút thêm group nếu còn group chưa chọn */}
       {activeGroups.length < GROUPS.length && (
@@ -413,7 +438,7 @@ const ProfileEditPage = () => {
       </Modal>
 
       {/* Nút lưu */}
-      <div className="flex justify-end mt-8">
+      <div className="flex justify-center space-x-3 mt-3">
         <Button
           type="primary"
           icon={<SaveOutlined />}
@@ -422,6 +447,15 @@ const ProfileEditPage = () => {
           onClick={handleSaveProfile}
         >
           Lưu thay đổi
+        </Button>
+        <Button
+          type="default"
+          // icon={<DeleteOutlined />}
+          size="large"
+          loading={saving}
+          onClick={() => navigate(`/profile`)}
+        >
+          Trở về trang cá nhân
         </Button>
       </div>
     </div>
