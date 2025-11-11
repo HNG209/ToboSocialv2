@@ -1,4 +1,4 @@
-import { Avatar, Button, Modal } from "antd";
+import { Avatar, Button, Modal, Tooltip } from "antd";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -8,6 +8,7 @@ import {
   SendOutlined,
   SettingOutlined,
   UserAddOutlined,
+  InfoCircleOutlined,
 } from "@ant-design/icons";
 import ProfileMenu from "../components/ProfileMenu";
 import PostThumb from "../components/PostThumb";
@@ -32,6 +33,7 @@ const ProfilePage = () => {
 
   const posts = useSelector((state) => state.profile.posts);
   const authUser = useSelector((state) => state.auth.user); // fetch ở sidebar khi refresh
+  // TODO: tạo trang riêng cho profile người khác
   const profileUser = useSelector((state) => state.profile.user); // fetch khi có id
   const status = useSelector((state) => state.profile.status);
 
@@ -92,6 +94,21 @@ const ProfilePage = () => {
         <div className="flex flex-col items-center justify-center mt-2 rounded-lg w-full max-w-md mx-auto">
           <h1 className="text-lg sm:text-xl md:text-2xl font-semibold break-words">
             {userData?.profile?.displayName || "Unnamed User"}
+            {id && (
+              <Tooltip title="Xem thông tin giới thiệu">
+                <Button
+                  type="text"
+                  shape="circle"
+                  icon={
+                    <InfoCircleOutlined
+                      style={{ fontSize: 22, color: "#1890ff" }}
+                    />
+                  }
+                  className="ml-1"
+                  onClick={() => navigate(`/profile/${id}/info`)}
+                />
+              </Tooltip>
+            )}
           </h1>
           <p className="text-xs sm:text-sm md:text-base text-purple-700 hover:text-gray-500 break-words">
             @{userData?.username}

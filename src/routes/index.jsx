@@ -15,6 +15,7 @@ import NotificationPage from "../pages/NotificationPage";
 import PostDetailPage from "../pages/PostDetailPage";
 import PostUpdatePage from "../pages/PostUpdatePage";
 import PostDetailContainerPage from "../pages/PostDetailContainerPage";
+import ProfileInfoPage from "../pages/ProfileInfoPage";
 
 const router = createBrowserRouter([
   {
@@ -65,6 +66,10 @@ const router = createBrowserRouter([
       {
         path: "profile/:id",
         element: <ProfilePage />,
+      },
+      {
+        path: "profile/:id/info",
+        element: <ProfileInfoPage />,
       },
       {
         path: "/edit-profile",

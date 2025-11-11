@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { use, useEffect, useState } from "react";
 import {
   Card,
   Avatar,
@@ -11,7 +11,6 @@ import {
   Modal,
   Input,
   Form,
-  message,
   Row,
   Col,
   Radio,
@@ -28,8 +27,8 @@ import {
   SaveOutlined,
 } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
-import { editProfile } from "../redux/auth.slice";
+import { useParams } from "react-router-dom";
+import { getCurrentUser } from "../redux/profile.slice";
 
 const { Title, Text } = Typography;
 
@@ -80,43 +79,20 @@ const genderOptions = [
   { label: "Khác", value: "other" },
 ];
 
-const ProfileEditPage = () => {
+// Chỉ xem được, không chỉnh sửa
+const ProfileInfoPage = () => {
+  const { id } = useParams();
   const dispatch = useDispatch();
-  const user = useSelector((state) => state.auth.user);
-  const navigate = useNavigate();
+  const user = useSelector((state) => state.profile.user);
 
-  // Binding lại attributes từ user.introduction (dạng [{key, value, group}]) thành object { group: [ {key, value, group}, ... ] }
-  const initialAttributes = React.useMemo(() => {
-    const intro = user?.introduction || [];
-    const grouped = {};
-    intro.forEach((item) => {
-      if (!grouped[item.group]) grouped[item.group] = [];
-      grouped[item.group].push(item);
-    });
-    return grouped;
-  }, [user]);
-
-  // Danh sách các group đã chọn để hiển thị (từ introduction)
-  const initialActiveGroups = React.useMemo(() => {
-    return Object.keys(initialAttributes);
-  }, [initialAttributes]);
-
-  // Avatar & name state
-  const [avatar, setAvatar] = useState(
-    user?.profile?.avatar || `https://i.pravatar.cc/150?u=${user?._id}`
-  );
-  const [avatarFile, setAvatarFile] = useState(null);
-  const [displayName, setDisplayName] = useState(
-    user?.profile?.displayName || user?.fullName || user?.username || ""
-  );
-  const [bio, setBio] = useState(user?.profile?.bio || "");
-  const [gender, setGender] = useState(user?.profile?.gender || "other");
-  const fileInputRef = useRef();
+  useEffect(() => {
+    dispatch(getCurrentUser({ id }));
+  }, [dispatch, id]);
 
   // Danh sách các group đã chọn để hiển thị
-  const [activeGroups, setActiveGroups] = useState(initialActiveGroups);
+  const [activeGroups, setActiveGroups] = useState([]);
   // Dữ liệu các thuộc tính từng group
-  const [attributes, setAttributes] = useState(initialAttributes);
+  const [attributes, setAttributes] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState("add"); // add | edit
   const [editingAttr, setEditingAttr] = useState(null);
@@ -124,35 +100,23 @@ const ProfileEditPage = () => {
 
   // State cho form modal
   const [form] = Form.useForm();
-  const [saving, setSaving] = useState(false);
 
-  // Thêm group mới
-  const handleAddGroup = () => {
-    Modal.confirm({
-      title: "Chọn nhóm để thêm",
-      content: (
-        <Select
-          style={{ width: "100%" }}
-          placeholder="Chọn nhóm"
-          options={GROUPS.filter((g) => !activeGroups.includes(g.key)).map(
-            (g) => ({
-              value: g.key,
-              label: g.label,
-            })
-          )}
-          onChange={(val) => {
-            setActiveGroups([...activeGroups, val]);
-            Modal.destroyAll();
-          }}
-        />
-      ),
-      icon: null,
-      okButtonProps: { style: { display: "none" } },
-      cancelText: "Đóng",
-      closable: true,
-      maskClosable: true,
+  // Binding lại attributes từ user.introduction (dạng [{key, value, group}]) thành object { group: [ {key, value, group}, ... ] }
+  useEffect(() => {
+    const intro = user?.introduction || [];
+    const grouped = {};
+    intro.forEach((item) => {
+      if (!grouped[item.group]) grouped[item.group] = [];
+      grouped[item.group].push(item);
     });
-  };
+
+    setAttributes(grouped);
+  }, [user]);
+
+  // Danh sách các group đã chọn để hiển thị (từ introduction)
+  useEffect(() => {
+    setActiveGroups(Object.keys(attributes));
+  }, [attributes]);
 
   // Thêm thuộc tính cho group
   const handleAdd = (groupKey) => {
@@ -212,71 +176,6 @@ const ProfileEditPage = () => {
     setAttributes(newAttrs);
   };
 
-  // Đổi avatar
-  const handleAvatarChange = (info) => {
-    const file = info.target.files[0];
-    if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      message.error("Chỉ chọn file ảnh!");
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setAvatar(e.target.result);
-    };
-    reader.readAsDataURL(file);
-    setAvatarFile(file);
-  };
-
-  // Đổi tên
-  const handleNameChange = (e) => {
-    setDisplayName(e.target.value);
-  };
-
-  // Lưu toàn bộ form
-  const handleSaveProfile = async () => {
-    setSaving(true);
-    try {
-      const formData = new FormData();
-      formData.append("profile[displayName]", displayName);
-      formData.append("profile[bio]", bio);
-      formData.append("profile[gender]", gender);
-      if (avatarFile) {
-        formData.append("profile[avatar]", avatarFile);
-      } else {
-        formData.append("profile[avatar]", avatar);
-      }
-      // introduction: array
-      const introArr = [];
-      Object.entries(attributes).forEach(([group, arr]) => {
-        arr.forEach((item) => {
-          introArr.push({
-            key: item.key,
-            value: item.value,
-            group,
-          });
-        });
-      });
-      formData.append("introduction", JSON.stringify(introArr));
-
-      dispatch(editProfile(formData))
-        .unwrap()
-        .then(() => {
-          navigate(`/profile`);
-          message.success("Cập nhật thành công!");
-        })
-        .catch(() => {
-          message.error("Có lỗi xảy ra khi lưu!");
-        })
-        .finally(() => {
-          setSaving(false);
-        });
-    } catch (err) {
-      message.error("Có lỗi xảy ra khi lưu!");
-      setSaving(false);
-    }
-  };
-
   return (
     <div className="max-w-xl mx-auto flex flex-col py-6 px-2 bg-white min-h-screen text-[#222]">
       <div className="text-lg font-semibold mb-4">Thông tin cơ bản</div>
@@ -293,31 +192,20 @@ const ProfileEditPage = () => {
             <div className="relative group" style={{ width: 90, height: 90 }}>
               <Avatar
                 size={90}
-                src={avatar}
+                src={user?.profile?.avatar}
                 icon={<UserOutlined />}
                 style={{ border: "2px solid #1890ff", background: "#fff" }}
-              />
-              <Button
-                shape="circle"
-                icon={<UploadOutlined />}
-                size="small"
-                className="absolute bottom-1 right-1 !bg-white !border !border-blue-400 !text-blue-600 group-hover:!opacity-100 opacity-80"
-                style={{ zIndex: 2 }}
-                onClick={() => fileInputRef.current?.click()}
-              />
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                style={{ display: "none" }}
-                onChange={handleAvatarChange}
               />
             </div>
           </Col>
           <Col flex="auto">
             <Input
-              value={displayName}
-              onChange={handleNameChange}
+              value={
+                user?.profile?.displayName ||
+                user?.fullName ||
+                user?.username ||
+                ""
+              }
               maxLength={50}
               className="!text-xl !font-bold !bg-white !border-0 !shadow-none !py-1 !text-blue-900"
               style={{
@@ -327,24 +215,22 @@ const ProfileEditPage = () => {
                 background: "transparent",
               }}
               bordered={false}
-              placeholder="Nhập tên hiển thị"
+              disabled
             />
             <div className="mt-2">
               <Input.TextArea
-                value={bio}
-                onChange={(e) => setBio(e.target.value)}
+                value={user?.profile?.bio || ""}
                 maxLength={200}
                 rows={2}
-                placeholder="Giới thiệu bản thân"
                 className="!bg-white !border !border-blue-100 !rounded"
                 style={{ resize: "none" }}
+                disabled
               />
             </div>
             <div className="mt-2">
               <Radio.Group
                 options={genderOptions}
-                onChange={(e) => setGender(e.target.value)}
-                value={gender}
+                value={user?.profile?.gender || "other"}
                 optionType="button"
                 buttonStyle="solid"
               />
@@ -354,18 +240,6 @@ const ProfileEditPage = () => {
       </Card>
 
       <div className="text-lg font-semibold mb-4">Thông tin giới thiệu</div>
-
-      {/* Nút thêm group nếu còn group chưa chọn */}
-      {activeGroups.length < GROUPS.length && (
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          className="mb-4"
-          onClick={handleAddGroup}
-        >
-          Thêm nhóm thông tin
-        </Button>
-      )}
 
       {/* Hiển thị các group đã chọn */}
       {activeGroups.map((groupKey) => {
@@ -435,41 +309,12 @@ const ProfileEditPage = () => {
           </Form.Item>
         </Form>
       </Modal>
-
-      {/* Nút lưu */}
-      <div className="flex justify-center space-x-3 mt-3">
-        <Button
-          type="primary"
-          icon={<SaveOutlined />}
-          size="large"
-          loading={saving}
-          onClick={handleSaveProfile}
-        >
-          Lưu thay đổi
-        </Button>
-        <Button
-          type="default"
-          // icon={<DeleteOutlined />}
-          size="large"
-          loading={saving}
-          onClick={() => navigate(`/profile`)}
-        >
-          Trở về trang cá nhân
-        </Button>
-      </div>
     </div>
   );
 };
 
 // Section hiển thị từng nhóm
-const Section = ({
-  group,
-  attributes,
-  onAdd,
-  onEdit,
-  onDelete,
-  onDeleteGroup,
-}) => (
+const Section = ({ group, attributes, onAdd }) => (
   <Card
     className="!rounded-xl !mb-4 !bg-blue-50 !border-0"
     bodyStyle={{ padding: 0, background: "transparent" }}
@@ -483,16 +328,6 @@ const Section = ({
           {group.label}
         </Title>
       </Space>
-      <Button
-        type="text"
-        danger
-        icon={<DeleteOutlined />}
-        onClick={onDeleteGroup}
-        className="!text-red-400 !font-medium"
-        style={{ marginLeft: 8 }}
-      >
-        Xoá nhóm
-      </Button>
     </div>
     <Divider className="!my-2 !bg-blue-200" />
     <div className="px-6 pb-4">
@@ -509,28 +344,8 @@ const Section = ({
         <List
           itemLayout="horizontal"
           dataSource={attributes}
-          renderItem={(item, idx) => (
-            <List.Item
-              className="!bg-transparent"
-              actions={[
-                <Button
-                  type="text"
-                  icon={<EditOutlined />}
-                  onClick={() => onEdit(item, idx)}
-                  key="edit"
-                  className="!text-blue-400"
-                />,
-                <Button
-                  type="text"
-                  danger
-                  onClick={() => onDelete(idx)}
-                  key="delete"
-                  className="!text-red-400"
-                >
-                  Xoá
-                </Button>,
-              ]}
-            >
+          renderItem={(item) => (
+            <List.Item className="!bg-transparent">
               <List.Item.Meta
                 title={
                   <span className="text-blue-900 font-medium">
@@ -546,17 +361,8 @@ const Section = ({
           )}
         />
       )}
-      <Button
-        type="dashed"
-        icon={<PlusOutlined />}
-        className="mt-2 w-full"
-        onClick={onAdd}
-        block
-      >
-        Thêm thông tin
-      </Button>
     </div>
   </Card>
 );
 
-export default ProfileEditPage;
+export default ProfileInfoPage;
