@@ -73,14 +73,11 @@ function PostCard({ post: initialPost, userId }) {
   const navigate = useNavigate();
   const navigateProfile = useProfileNavigate();
   const posts = useSelector((state) => state.feed.posts); // test only
+  const user = useSelector((state) => state.auth.user); // auth user
 
   const postMeta = posts.find((p) => p._id === initialPost._id) || initialPost; // bao gồm author, caption
   const postContent =
     postMeta.type === "shared" ? postMeta.originalPost : postMeta; // bao gồm mediaFiles, phân biệt share và post thường
-
-  useEffect(() => {
-    console.log("PostCard rendered with post:", postMeta);
-  }, [postMeta]);
 
   const [, setIsModalOpen] = useState(false);
   const [isPostDetailOpen, setIsPostDetailOpen] = useState(false);
@@ -373,6 +370,7 @@ function PostCard({ post: initialPost, userId }) {
                 </div>
               )}
             </div>
+
             <span className="text-xs text-gray-400">{postTime}</span>
           </div>
         </div>
@@ -530,11 +528,19 @@ function PostCard({ post: initialPost, userId }) {
             className="text-black hover:text-gray-400 cursor-pointer"
             onClick={showPostDetailModal}
           />
-          <SendOutlined
-            className="text-black hover:text-gray-400 cursor-pointer"
-            onClick={showShareModal}
-          />
+          {postContent.author._id !== user._id && (
+            <SendOutlined
+              className="text-black hover:text-gray-400 cursor-pointer"
+              onClick={showShareModal}
+            />
+          )}
         </div>
+        {postMeta.type === "shared" && (
+          <div className="text-sm text-gray-500">
+            được chia sẻ từ{" "}
+            {postContent.author._id === user._id ? "bạn" : "other"}
+          </div>
+        )}
       </div>
 
       {/* Likes */}

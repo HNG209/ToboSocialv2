@@ -110,6 +110,7 @@ const ProfilePage = () => {
               </Tooltip>
             )}
           </h1>
+
           <p className="text-xs sm:text-sm md:text-base text-purple-700 hover:text-gray-500 break-words">
             @{userData?.username}
           </p>
