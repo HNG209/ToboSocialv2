@@ -5,6 +5,13 @@ const getUserProfile = () => {
   return axios.get(URL_BACKEND);
 };
 
+const editProfileAPI = (data) => {
+  const URL_BACKEND = `/v1/api/profile`;
+  return axios.put(URL_BACKEND, data, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+};
+
 const getUserAPI = (userId) => {
   const URL_BACKEND = `/v1/api/users/${userId}`;
   return axios.get(URL_BACKEND);
@@ -39,4 +46,5 @@ export {
   getUserProfile,
   searchUsersAPI,
   getUserAPI,
+  editProfileAPI,
 };

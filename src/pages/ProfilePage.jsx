@@ -91,7 +91,7 @@ const ProfilePage = () => {
 
         <div className="flex flex-col items-center justify-center mt-2 rounded-lg w-full max-w-md mx-auto">
           <h1 className="text-lg sm:text-xl md:text-2xl font-semibold break-words">
-            {userData?.fullName}
+            {userData?.profile?.displayName || "Unnamed User"}
           </h1>
           <p className="text-xs sm:text-sm md:text-base text-purple-700 hover:text-gray-500 break-words">
             @{userData?.username}

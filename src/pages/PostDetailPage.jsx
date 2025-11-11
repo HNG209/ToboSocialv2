@@ -62,12 +62,8 @@ const PostDetailPage = ({ onClose, postId, root, replyTo, commentId }) => {
   const [replyToComment, setReplyToComment] = useState(null);
   const [isOptionsModalOpen, setIsOptionsModalOpen] = useState(false);
 
-  const [postDetail, setPostId, status, error] = useFetchPost(postId); // custom hook
-  const [setRoot, setReplyTo, setCommentId] = useFetchHighlightComment(
-    root,
-    replyTo,
-    commentId
-  );
+  const [postDetail, , status, error] = useFetchPost(postId); // custom hook
+  useFetchHighlightComment(root, replyTo, commentId);
   const authUser = useSelector((state) => state.auth.user);
   const postComments = useSelector((state) => state.post.comments);
   const likeStatus = useSelector((state) => state.post.current.isLiked);

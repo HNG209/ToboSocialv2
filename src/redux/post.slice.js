@@ -7,12 +7,7 @@ import {
   fetchPostDetailAPI,
   updatePostAPI,
 } from "../services/post.service";
-import {
-  fetchLikersAPI,
-  likeAPI,
-  likeStatusAPI,
-  unlikeAPI,
-} from "../services/like.service";
+import { likeAPI, likeStatusAPI, unlikeAPI } from "../services/like.service";
 import {
   createCommentAPI,
   fetchRepliedCommentAPI,
@@ -358,7 +353,10 @@ const postSlice = createSlice({
           (c) => c._id === comment.rootComment
         );
 
-        if (rootIndex === -1) return;
+        if (rootIndex === -1) {
+          state.status = "succeeded";
+          return;
+        }
 
         state.comments[rootIndex].replies = pushUnique(
           state.comments[rootIndex].replies,

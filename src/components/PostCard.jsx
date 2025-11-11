@@ -25,7 +25,6 @@ import { useNavigate, Link } from "react-router-dom";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
-// import "../../styles/home.css";
 import { useDispatch, useSelector } from "react-redux";
 import { IoIosMore } from "react-icons/io";
 import ProfileCard from "./ProfileCard ";
@@ -74,11 +73,16 @@ function PostCard({ post: initialPost, userId }) {
   const navigate = useNavigate();
   const navigateProfile = useProfileNavigate();
   const posts = useSelector((state) => state.feed.posts); // test only
-  const status = "success";
-  // const status = useSelector((state) => state.posts.status);
-  const post = posts.find((p) => p._id === initialPost._id) || initialPost;
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const postMeta = posts.find((p) => p._id === initialPost._id) || initialPost; // bao gồm author, caption
+  const postContent =
+    postMeta.type === "shared" ? postMeta.originalPost : postMeta; // bao gồm mediaFiles, phân biệt share và post thường
+
+  useEffect(() => {
+    console.log("PostCard rendered with post:", postMeta);
+  }, [postMeta]);
+
+  const [, setIsModalOpen] = useState(false);
   const [isPostDetailOpen, setIsPostDetailOpen] = useState(false);
   const [isShareModalVisible, setIsShareModalVisible] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
@@ -95,7 +99,7 @@ function PostCard({ post: initialPost, userId }) {
   const loadTime = useRef(new Date());
   const [showProfileCard, setShowProfileCard] = useState(false);
   const profileCardTimeoutRef = useRef(null);
-  const [authorState, setAuthorState] = useState(post.author);
+  const [authorState, setAuthorState] = useState(postMeta.author);
 
   const showPostDetailModal = () => {
     setIsPostDetailOpen(true);
@@ -184,13 +188,13 @@ function PostCard({ post: initialPost, userId }) {
   };
 
   const handleCopyLink = () => {
-    const shareLink = `${window.location.origin}/posts/${post._id}`;
+    const shareLink = `${window.location.origin}/posts/${postMeta._id}`;
     copyToClipboard(shareLink);
     setIsModalOpen(false);
   };
 
   const handleGoToPost = () => {
-    const shareLink = `${window.location.origin}/posts/${post._id}`;
+    const shareLink = `${window.location.origin}/posts/${postMeta._id}`;
     window.open(shareLink, "_blank");
     setIsModalOpen(false);
   };
@@ -203,7 +207,7 @@ function PostCard({ post: initialPost, userId }) {
     slidesToScroll: 1,
     arrows: false,
     touchMove: true,
-    customPaging: (i) => (
+    customPaging: () => (
       <div className="w-1.5 h-1.5 bg-white rounded-full opacity-50 mx-1 transition-opacity duration-300" />
     ),
     dotsClass: "slick-dots custom-dots",
@@ -227,7 +231,7 @@ function PostCard({ post: initialPost, userId }) {
 
   const handleVideoPlay = (current, refs = videoRefs) => {
     const video = refs.current[current];
-    if (video && post.mediaFiles[current].type === "video") {
+    if (video && postContent.mediaFiles[current].type === "video") {
       video.muted = isMuted;
       video.play().catch((error) => console.log("Video play error:", error));
     }
@@ -251,7 +255,7 @@ function PostCard({ post: initialPost, userId }) {
     //   return;
     // }
     // onLikeToggle(post._id, isLiked);
-    dispatch(toggleLike(post._id));
+    dispatch(toggleLike(postMeta._id));
   };
 
   const handleProfileNavigate = (userId) => {
@@ -287,40 +291,12 @@ function PostCard({ post: initialPost, userId }) {
         handleVideoPlay(currentSlide, videoRefs);
       }
     },
-    [currentSlide, post.mediaFiles]
+    [currentSlide, postContent.mediaFiles]
   );
 
   useEffect(() => {
-    setPostTime(timeAgo(post.createdAt, loadTime.current));
-  }, [post]);
-  //   if (isCommentModalOpen) {
-  //     const sorted = [...post.comments].sort((a, b) => {
-  //       if (a.user?._id === userId && b.user?._id === userId) {
-  //         return new Date(b.createdAt) - new Date(a.createdAt);
-  //       }
-  //       if (a.user?._id === userId && b.user?._id !== userId) return -1;
-  //       if (a.user?._id !== userId && b.user?._id === userId) return 1;
-  //       return new Date(b.createdAt) - new Date(a.createdAt);
-  //     });
-
-  //     setSortedComments(sorted);
-
-  //     const now = new Date();
-  //     const updatedCommentTimes = sorted.map((comment) =>
-  //       timeAgo(comment.createdAt, now)
-  //     );
-  //     setCommentTimes(updatedCommentTimes);
-
-  //     if (commentSliderRef.current) {
-  //       commentSliderRef.current.slickGoTo(currentSlide);
-  //       setTimeout(() => {
-  //         handleVideoPlay(currentSlide, commentVideoRefs);
-  //       }, 100);
-  //     }
-  //   } else {
-  //     handleVideoPause(currentSlide, commentVideoRefs);
-  //   }
-  // }, [isCommentModalOpen, post.comments, currentSlide, userId]);
+    setPostTime(timeAgo(postMeta.createdAt, loadTime.current));
+  }, [postMeta.createdAt]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(handleVisibilityChange, {
@@ -337,7 +313,7 @@ function PostCard({ post: initialPost, userId }) {
   useEffect(() => {
     videoRefs.current = [];
     commentVideoRefs.current = [];
-  }, [post]);
+  }, [postMeta._id, postContent.mediaFiles.length]);
 
   const handleMouseEnter = () => {
     if (!userId) return;
@@ -354,8 +330,6 @@ function PostCard({ post: initialPost, userId }) {
     }, 200);
   };
 
-  const shareLink = `${window.location.origin}/posts/${post._id}`;
-
   return (
     <div className="border-b border-gray-200 pb-4 bg-white" ref={cardRef}>
       {/* Header */}
@@ -363,8 +337,8 @@ function PostCard({ post: initialPost, userId }) {
         <div className="flex items-center">
           <Avatar
             src={
-              post.author?.profile?.avatar ||
-              `https://i.pravatar.cc/150?u=${post.author?._id}`
+              postMeta.author?.profile?.avatar ||
+              `https://i.pravatar.cc/150?u=${postMeta.author?._id}`
             }
             icon={<UserOutlined />}
             className="border-2 border-pink-500 p-0.5 rounded-full"
@@ -378,11 +352,11 @@ function PostCard({ post: initialPost, userId }) {
             >
               <div
                 onClick={() => {
-                  handleProfileNavigate(post?.author._id);
+                  handleProfileNavigate(postMeta?.author._id);
                 }}
                 className="font-semibold text-black hover:underline cursor-pointer"
               >
-                {post.author?.username}
+                {postMeta.author?.username}
               </div>
               {showProfileCard && (
                 <div
@@ -454,10 +428,10 @@ function PostCard({ post: initialPost, userId }) {
         centered
       >
         <ShareCard
-          initialCaption={post.caption}
+          initialCaption={postMeta.caption}
           onShare={async (caption) => {
             // Call the share API with the caption
-            await sharePostAPI(post._id, caption)
+            await sharePostAPI(postMeta._id, caption)
               .then(() => {
                 message.success("Post shared successfully!");
                 setIsShareModalVisible(false);
@@ -480,7 +454,7 @@ function PostCard({ post: initialPost, userId }) {
         destroyOnHidden
       >
         <PostDetailPage
-          postId={post._id}
+          postId={postMeta._id}
           onClose={() => setIsPostDetailOpen(false)}
         />
       </Modal>
@@ -488,7 +462,7 @@ function PostCard({ post: initialPost, userId }) {
       {/* Post Media Carousel */}
       <div className="relative">
         <Slider ref={sliderRef} {...sliderSettings}>
-          {post.mediaFiles.map((media, index) => (
+          {postContent.mediaFiles.map((media, index) => (
             <div key={index} className="w-full h-[585px] relative">
               {media.type === "image" ? (
                 <img
@@ -516,7 +490,7 @@ function PostCard({ post: initialPost, userId }) {
             </div>
           ))}
         </Slider>
-        {post.mediaFiles.length > 1 && (
+        {postContent.mediaFiles.length > 1 && (
           <>
             {currentSlide !== 0 && (
               <button
@@ -526,7 +500,7 @@ function PostCard({ post: initialPost, userId }) {
                 <LeftOutlined className="text-black text-sm" />
               </button>
             )}
-            {currentSlide !== post.mediaFiles.length - 1 && (
+            {currentSlide !== postContent.mediaFiles.length - 1 && (
               <button
                 className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-70 rounded-full p-1 shadow-md"
                 onClick={() => handleNext(sliderRef)}
@@ -541,7 +515,7 @@ function PostCard({ post: initialPost, userId }) {
       {/* Action Icons */}
       <div className="flex justify-between px-3 pt-2 text-2xl">
         <div className="flex gap-3">
-          {post.isLiked ? (
+          {postMeta.isLiked ? (
             <HeartFilled
               className="cursor-pointer text-red-500 hover:text-gray-400"
               onClick={handleLikeClick}
@@ -565,15 +539,15 @@ function PostCard({ post: initialPost, userId }) {
 
       {/* Likes */}
       <div className="px-3 pt-1 text-sm font-semibold text-black">
-        {post.likeCount} likes
+        {postMeta.likeCount} likes
       </div>
 
       {/* Caption */}
       <div className="px-3 pt-1 pb-2 text-sm">
         <span className="font-semibold mr-2 text-black">
-          {post.author?.username || `user${post.author?._id}`}
+          {postMeta.author?.username || `user${postMeta.author?._id}`}
         </span>
-        <span className="text-black">{post.caption}</span>
+        <span className="text-black">{postMeta.caption}</span>
       </div>
     </div>
   );
