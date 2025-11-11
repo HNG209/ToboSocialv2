@@ -2,8 +2,14 @@ import axios from "axios";
 
 const instance = axios.create({
   baseURL: import.meta.env.VITE_BACKEND_URL,
+  headers: {
+    "Content-Type": "application/json",
+    "ngrok-skip-browser-warning": "true",
+  },
   withCredentials: true, // nếu dùng cookie refreshToken
 });
+
+instance.defaults.headers.common["ngrok-skip-browser-warning"] = "true";
 
 // Biến cờ để ngăn chặn nhiều request làm mới token cùng lúc
 let isRefreshing = false;
