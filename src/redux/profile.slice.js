@@ -1,26 +1,23 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import {
+  fetchMyPostsAPI,
   fetchPostByUserAPI,
-  fetchProfilePosts,
-} from "../services/post.service";
-import {
   followUserAPI,
-  getUserAPI,
+  getUserByIdAPI,
   unfollowUserAPI,
-  updateUserAPI,
 } from "../services/user.service";
 import {
   fetchProfileSharedPosts,
   fetchSharedPostByUserAPI,
 } from "../services/share.service";
-import { createPost, deletePost, toggleLike, updatePost } from "./post.slice";
+import { createPost, deletePost, toggleLike } from "./post.slice";
 
 export const fetchPostByUser = createAsyncThunk(
   "profile/fetchPostByUser",
   async ({ id, page, limit }, { rejectWithValue }) => {
     try {
       if (id) return await fetchPostByUserAPI(id, page, limit);
-      return await fetchProfilePosts(page, limit);
+      return await fetchMyPostsAPI(page, limit);
     } catch (error) {
       console.error("Error in fetchPostByUser:", error.message);
       return rejectWithValue(error.message);
@@ -45,23 +42,9 @@ export const getCurrentUser = createAsyncThunk(
   "profile/getCurrentUser",
   async ({ id }, { rejectWithValue }) => {
     try {
-      return await getUserAPI(id);
+      return await getUserByIdAPI(id);
     } catch (error) {
       console.error("Error in getUserById:", error.message);
-      return rejectWithValue(error.message);
-    }
-  }
-);
-
-//update user by id
-export const updateUser = createAsyncThunk(
-  "profile/updateUser",
-  async (data, { rejectWithValue }) => {
-    try {
-      const response = await updateUserAPI(data);
-      return response;
-    } catch (error) {
-      console.error("Error in updateUserById:", error.message);
       return rejectWithValue(error.message);
     }
   }
@@ -123,9 +106,9 @@ const profileSlice = createSlice({
         state.posts.push(action.payload);
       })
 
-      .addCase(updatePost.fulfilled, (state, action) => {
-        // console.log("updated:", action.payload);
-      })
+      // .addCase(updatePost.fulfilled, (state, action) => {
+      //   // console.log("updated:", action.payload);
+      // })
 
       .addCase(toggleLike.fulfilled, (state, action) => {
         const post = state.posts.find((p) => p._id === action.payload.postId);
@@ -172,18 +155,6 @@ const profileSlice = createSlice({
         state.user = action.payload; // Gán thông tin người dùng từ API
       })
       .addCase(getCurrentUser.rejected, (state, action) => {
-        state.status = "failed"; // Đặt trạng thái thành failed
-        state.error = action.payload; // Lưu lỗi nếu có
-      })
-      // ===== Update User by ID =====
-      .addCase(updateUser.pending, (state) => {
-        state.status = "loading"; // Đặt trạng thái thành loading
-      })
-      .addCase(updateUser.fulfilled, (state) => {
-        state.status = "succeeded"; // Đặt trạng thái thành succeeded
-        // state.user = action.payload; // Cập nhật thông tin người dùng từ API
-      })
-      .addCase(updateUser.rejected, (state, action) => {
         state.status = "failed"; // Đặt trạng thái thành failed
         state.error = action.payload; // Lưu lỗi nếu có
       })

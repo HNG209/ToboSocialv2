@@ -8,7 +8,7 @@ import {
 import {
   editProfileAPI,
   followUserAPI,
-  getUserProfile,
+  getMyProfile,
   unfollowUserAPI,
 } from "../services/user.service";
 
@@ -16,7 +16,7 @@ export const getAuthUser = createAsyncThunk(
   "user/getAuthUser",
   async (_, { rejectWithValue }) => {
     try {
-      const rs = await getUserProfile();
+      const rs = await getMyProfile();
       return rs;
     } catch (error) {
       console.error("Error in getUserById:", error.message);

@@ -1,47 +1,35 @@
 import axios from "../axios/axios.customize";
 
+const API_PREFIX = "/v1/api/auth";
+
 // Đăng nhập
 const loginAPI = async (username, password) => {
-  const URL_BACKEND = `/v1/api/login`;
+  const URL_BACKEND = `${API_PREFIX}/login`;
   return axios.post(URL_BACKEND, { username, password });
 };
 
 // Đăng ký
 const registerAPI = async (username, email, password, fullName) => {
-  const URL_BACKEND = `/v1/api/register`;
+  const URL_BACKEND = `${API_PREFIX}/register`;
   return axios.post(URL_BACKEND, { username, email, password, fullName });
 };
 
 // Đăng xuất
 const logoutAPI = () => {
-  const URL_BACKEND = `/v1/api/logout`;
+  const URL_BACKEND = `${API_PREFIX}/logout`;
   return axios.post(URL_BACKEND);
 };
 
 // Quên mật khẩu
 const forgotPasswordAPI = (email) => {
-  const URL_BACKEND = `/v1/api/users/forgot-password`;
+  const URL_BACKEND = `${API_PREFIX}/forgot-password`;
   return axios.post(URL_BACKEND, { email });
 };
 
 const updateUserPasswordAPI = async (data) => {
-  const URL_BACKEND = `/v1/api/password`;
+  const URL_BACKEND = `${API_PREFIX}/password`;
   return axios.put(URL_BACKEND, data);
 };
-
-// const searchUsersAPI = (query) => {
-//   const URL = `/v1/api/search?q=${encodeURIComponent(query)}`;
-//   return axios.get(URL);
-// };
-// const getUserByUsernameAPI = (username) => {
-//   const URL = `/v1/api/by-username/${encodeURIComponent(username)}`;
-//   return axios.get(URL);
-// };
-
-// const getUserPostsAPI = (userId, page = 1, limit = 10) => {
-//   const URL = `/v1/api/${userId}/posts?page=${page}&limit=${limit}`;
-//   return axios.get(URL); // interceptor sẽ trả ra response.result
-// };
 
 export {
   loginAPI,
